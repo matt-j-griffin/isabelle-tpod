@@ -1,0 +1,1 @@
+This folder contains an interpretation of the TPOD hyperproperty for state statewise transition systems. 

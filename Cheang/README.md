@@ -1,0 +1,1 @@
+This folder contains the theories which prove that Griffin et al.'s formalisation of TPOD is equivalent to Cheang et al.'s formalisation of TPOD. 

@@ -1,0 +1,9 @@
+Forall-Forall BD Security
+-------------------------
+
+Theoretical novelty: the unwinding technique is quite different from the ForallExists variant. 
+
+
+Possible applications:
+*** Unlike observational determinism and related concepts, this tracks the secret along traces, so can cope, e.g., with secrets that are added to a program through I/O facilities 
+*** The key to "fixing" some problems with TPOD is to relate a trace with its counterpart leak-wise in terms of the protected secret (this may not need sequences of secrets though)

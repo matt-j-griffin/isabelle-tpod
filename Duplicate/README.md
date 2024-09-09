@@ -1,0 +1,1 @@
+This folder contains the theories which duplicate BD-Security for statewise predicates instead of a fixed state.

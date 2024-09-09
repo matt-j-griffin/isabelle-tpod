@@ -1,0 +1,53 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{isabelle,isabellesym}
+
+% this should be the last package used
+\usepackage{pdfsetup}
+
+% urls in roman style, theory text in math-similar italics
+\urlstyle{rm}
+\isabellestyle{it}
+
+
+\begin{document}
+
+\title{Abstract Inference Triples}
+\author{Matt Griffin \and Brijesh Dongol \and Azalea Raad}
+\maketitle
+
+\begin{abstract}
+  This entry formalises (in)correctness triples over abstract big-step execution semantics. 
+  The aim is to provide a common base for triple-style (in)correctness logics, reducing syntax and 
+  theory duplication.
+
+  This work was developed as part of the POPL 2024 paper ``IsaBIL: A Framework for Verifying 
+  (In)correctness of Binaries in Isabelle/HOL'' by Matt~Griffin, Brijesh~Dongol and 
+  Azalea~Raad~\cite{LNCS2283}.
+
+  This entry defines three triples: \emph{partial correctness}, total \emph{correctness} and \emph{incorrectness}.
+  Formalised in locales, these triples encode common inference rules, such as pre/postcondition 
+  strengthening/weakening and conjunction/disjunction, which apply to all instantiations of the 
+  triples regardless of the execution semantics.
+
+  In order to verify the accuracy of the triples, and to motivate their use, we this entry presents 
+  various instantiations of the triples for the numerous (in)correctness logics found
+  in the Isabelle/HOL standard library and the AFP.
+
+  Our hope is that in future, new logics for (in)correctness will use these abstract triples.
+
+\end{abstract}
+
+\tableofcontents
+
+% include generated text of all theories
+\input{session}
+
+\section{Examples}
+
+We validate our XYZ...
+
+\bibliographystyle{abbrv}
+\bibliography{root}
+
+\end{document}

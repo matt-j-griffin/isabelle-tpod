@@ -7,16 +7,18 @@ begin
 locale Statewise_CTPOD = 
 
 (* vanilla semantics: *)
- Van: Statewise_OD_Base istate\<^sub>v\<^sub>a\<^sub>n validTrans\<^sub>v\<^sub>a\<^sub>n final\<^sub>v\<^sub>a\<^sub>n isInter\<^sub>v\<^sub>a\<^sub>n op\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n op\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n u\<^sub>v\<^sub>a\<^sub>n
+ Van: Statewise_OD_Base istate\<^sub>v\<^sub>a\<^sub>n validTrans\<^sub>v\<^sub>a\<^sub>n final\<^sub>v\<^sub>a\<^sub>n isInter\<^sub>v\<^sub>a\<^sub>n op\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n low_equiv\<^sub>v\<^sub>a\<^sub>n op\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n u\<^sub>v\<^sub>a\<^sub>n
 +   
 (* optimisation-enhanced semantics *)
- Opt: Statewise_OD_Base istate\<^sub>o\<^sub>p\<^sub>t validTrans\<^sub>o\<^sub>p\<^sub>t final\<^sub>o\<^sub>p\<^sub>t isInter\<^sub>o\<^sub>p\<^sub>t op\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t op\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t u\<^sub>o\<^sub>p\<^sub>t
+ Opt: Statewise_OD_Base istate\<^sub>o\<^sub>p\<^sub>t validTrans\<^sub>o\<^sub>p\<^sub>t final\<^sub>o\<^sub>p\<^sub>t isInter\<^sub>o\<^sub>p\<^sub>t op\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t low_equiv\<^sub>o\<^sub>p\<^sub>t op\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t u\<^sub>o\<^sub>p\<^sub>t
 
-  for istate\<^sub>v\<^sub>a\<^sub>n :: "('vstate::low_equiv)  \<Rightarrow> bool" and istate\<^sub>o\<^sub>p\<^sub>t :: "('ostate::low_equiv) \<Rightarrow> bool"
+  for istate\<^sub>v\<^sub>a\<^sub>n :: "'vstate \<Rightarrow> bool" and istate\<^sub>o\<^sub>p\<^sub>t :: "'ostate \<Rightarrow> bool"
     and validTrans\<^sub>v\<^sub>a\<^sub>n :: "'vstate \<times> 'vstate \<Rightarrow> bool" and validTrans\<^sub>o\<^sub>p\<^sub>t :: "'ostate \<times> 'ostate \<Rightarrow> bool"
     and final\<^sub>v\<^sub>a\<^sub>n :: \<open>'vstate \<Rightarrow> bool\<close> and final\<^sub>o\<^sub>p\<^sub>t :: \<open>'ostate \<Rightarrow> bool\<close>
     and isInter\<^sub>v\<^sub>a\<^sub>n :: \<open>'vstate \<Rightarrow> bool\<close> and isInter\<^sub>o\<^sub>p\<^sub>t :: \<open>'ostate \<Rightarrow> bool\<close>  
     and op\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n :: "'vstate \<Rightarrow> 'lowOp" and op\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t :: "'ostate \<Rightarrow> 'lowOp"
+    and low_equiv\<^sub>v\<^sub>a\<^sub>n :: \<open>'vstate \<Rightarrow> 'vstate \<Rightarrow> bool\<close> (infixl \<open>\<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n\<close> 100)
+    and low_equiv\<^sub>o\<^sub>p\<^sub>t :: \<open>'ostate \<Rightarrow> 'ostate \<Rightarrow> bool\<close> (infixl \<open>\<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t\<close> 100)
     and op\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n :: "'vstate \<Rightarrow> 'highOp" and op\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t :: "'ostate \<Rightarrow> 'highOp"
     and u\<^sub>v\<^sub>a\<^sub>n :: \<open>'vstate \<Rightarrow> bool\<close> and u\<^sub>o\<^sub>p\<^sub>t :: \<open>'ostate \<Rightarrow> bool\<close>
 
@@ -37,12 +39,6 @@ abbreviation \<open>ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t \<equiv> Opt.ops\<^su
 definition \<open>U\<^sub>v\<^sub>a\<^sub>n \<equiv> list_all u\<^sub>v\<^sub>a\<^sub>n\<close> 
 definition \<open>U\<^sub>o\<^sub>p\<^sub>t \<equiv> list_all u\<^sub>o\<^sub>p\<^sub>t\<close>
 
-interpretation lowEquivs\<^sub>v\<^sub>a\<^sub>n: list_all2_lemmas \<open>(\<approx>\<^sub>\<L>)\<close> \<open>(\<approx>\<^sub>\<L>)\<close>
-  by (rule Van.list_all2_lemmas_lowEquivs)
-
-interpretation lowEquivs\<^sub>o\<^sub>p\<^sub>t: list_all2_lemmas \<open>(\<approx>\<^sub>\<L>)\<close> \<open>(\<approx>\<^sub>\<L>)\<close>
-  by (rule Opt.list_all2_lemmas_lowEquivs)
-
 sublocale asCTPOD: CTPOD
   where Tr\<^sub>v\<^sub>a\<^sub>n = \<open>{\<pi>. istate\<^sub>v\<^sub>a\<^sub>n (hd \<pi>) \<and> validFromS\<^sub>v\<^sub>a\<^sub>n (hd \<pi>) \<pi> \<and> completedFrom\<^sub>v\<^sub>a\<^sub>n (hd \<pi>) \<pi>}\<close>
     and ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n = ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n and ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n = ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n
@@ -51,6 +47,14 @@ sublocale asCTPOD: CTPOD
     and ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t and ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t
     and U\<^sub>o\<^sub>p\<^sub>t = \<open>{\<pi>. U\<^sub>o\<^sub>p\<^sub>t \<pi>}\<close>
   .
+
+
+interpretation lowEquivs\<^sub>v\<^sub>a\<^sub>n: list_all2_lemmas \<open>(\<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n)\<close> \<open>(\<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n)\<close>
+  by (rule Van.list_all2_lemmas_lowEquivs)
+
+interpretation lowEquivs\<^sub>o\<^sub>p\<^sub>t: list_all2_lemmas \<open>(\<approx>\<^sub>\<L>\<^sub>s\<^sub>o\<^sub>p\<^sub>t)\<close> \<open>(\<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t)\<close>
+  by (rule Opt.list_all2_lemmas_lowEquivs)
+
 
 abbreviation \<open>secure \<equiv> asCTPOD.secure\<close>
 
@@ -61,8 +65,8 @@ lemma secure_alt_def: \<open>secure \<longleftrightarrow> (\<forall>ctr\<^sub>1 
   istate\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>2)  \<and> validFromS\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>2)  tr\<^sub>2  \<and> completedFrom\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>2)  tr\<^sub>2  \<and> U\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and>
   ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and>
   ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and>
-  hd tr\<^sub>1 \<approx>\<^sub>\<L> hd tr\<^sub>2 \<and> ctr\<^sub>1 \<approx>\<^sub>\<L> ctr\<^sub>2 \<longrightarrow>
-                   tr\<^sub>1 \<approx>\<^sub>\<L> tr\<^sub>2)\<close>
+  hd tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t hd tr\<^sub>2 \<and> ctr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<longrightarrow>
+                   tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2)\<close>
   unfolding asCTPOD.secure_def by auto
 
 lemma secure_def: \<open>secure \<longleftrightarrow> (\<forall>cs\<^sub>1 ctr\<^sub>1 cs\<^sub>2 ctr\<^sub>2 s\<^sub>1 tr\<^sub>1 s\<^sub>2 tr\<^sub>2.
@@ -72,13 +76,16 @@ lemma secure_def: \<open>secure \<longleftrightarrow> (\<forall>cs\<^sub>1 ctr\<
     U\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 \<and> U\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> U\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> U\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and>
     ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and>     
     ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> 
-    ctr\<^sub>1 \<approx>\<^sub>\<L> ctr\<^sub>2 \<and> s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2
+    ctr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2
    \<longrightarrow>
-    tr\<^sub>1 \<approx>\<^sub>\<L> tr\<^sub>2
+    tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2
   )\<close>
 unfolding asCTPOD.secure_def proof safe
   fix cs\<^sub>1 ctr\<^sub>1 cs\<^sub>2 ctr\<^sub>2 s\<^sub>1 tr\<^sub>1 s\<^sub>2 tr\<^sub>2
-  assume "\<forall>ctr\<^sub>1 \<in>{\<pi>. Van.asBD.validTrace \<pi>} \<inter> Collect U\<^sub>v\<^sub>a\<^sub>n. \<forall>ctr\<^sub>2 \<in>{\<pi>. Van.asBD.validTrace \<pi>} \<inter> Collect U\<^sub>v\<^sub>a\<^sub>n. \<forall>tr\<^sub>1 \<in>{\<pi>. Opt.asBD.validTrace \<pi>} \<inter> Collect U\<^sub>o\<^sub>p\<^sub>t. \<forall>tr\<^sub>2 \<in>{\<pi>. Opt.asBD.validTrace \<pi>} \<inter> Collect U\<^sub>o\<^sub>p\<^sub>t. ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> hd tr\<^sub>1 \<approx>\<^sub>\<L> hd tr\<^sub>2 \<and> ctr\<^sub>1 \<approx>\<^sub>\<L> ctr\<^sub>2 \<longrightarrow> tr\<^sub>1 \<approx>\<^sub>\<L> tr\<^sub>2"
+  assume "\<forall>ctr\<^sub>1 \<in>{\<pi>. Van.asBD.validTrace \<pi>} \<inter> Collect U\<^sub>v\<^sub>a\<^sub>n.
+          \<forall>ctr\<^sub>2 \<in>{\<pi>. Van.asBD.validTrace \<pi>} \<inter> Collect U\<^sub>v\<^sub>a\<^sub>n.
+          \<forall>tr\<^sub>1 \<in>{\<pi>. Opt.asBD.validTrace \<pi>} \<inter> Collect U\<^sub>o\<^sub>p\<^sub>t.
+          \<forall>tr\<^sub>2 \<in>{\<pi>. Opt.asBD.validTrace \<pi>} \<inter> Collect U\<^sub>o\<^sub>p\<^sub>t. ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> hd tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t hd tr\<^sub>2 \<and> ctr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<longrightarrow> tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
     and "istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1"
     and "istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2"
     and "istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1"
@@ -100,9 +107,9 @@ unfolding asCTPOD.secure_def proof safe
     and "ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
     and "ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1"
     and "ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
-    and "ctr\<^sub>1 \<approx>\<^sub>\<L> ctr\<^sub>2"
-    and "s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2"
-  thus "tr\<^sub>1 \<approx>\<^sub>\<L> tr\<^sub>2" apply -
+    and "ctr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2"
+    and "s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2"
+  thus "tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2" apply -
     apply (erule ball_inE[where x = ctr\<^sub>1], rule IntI, unfold mem_Collect_eq, simp add: Van.validFromS_def, assumption)
     apply (erule ball_inE[where x = ctr\<^sub>2], rule IntI, unfold mem_Collect_eq, simp add: Van.validFromS_def, assumption)
     apply (erule ball_inE[where x = tr\<^sub>1], rule IntI, unfold mem_Collect_eq, simp add: Opt.validFromS_def, assumption)
@@ -114,7 +121,8 @@ next
     and ctr\<^sub>2 :: "'vstate list"
     and tr\<^sub>1 :: "'ostate list"
     and tr\<^sub>2 :: "'ostate list"
-  assume "\<forall>cs\<^sub>1 ctr\<^sub>1 cs\<^sub>2 ctr\<^sub>2 s\<^sub>1 tr\<^sub>1 s\<^sub>2 tr\<^sub>2. istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 \<and> istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<and> validFromS\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 ctr\<^sub>1 \<and> validFromS\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 ctr\<^sub>2 \<and> validFromS\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 tr\<^sub>1 \<and> validFromS\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 tr\<^sub>2 \<and> completedFrom\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 ctr\<^sub>1 \<and> completedFrom\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 ctr\<^sub>2 \<and> completedFrom\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 tr\<^sub>1 \<and> completedFrom\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 tr\<^sub>2 \<and> U\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 \<and> U\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> U\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> U\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> ctr\<^sub>1 \<approx>\<^sub>\<L> ctr\<^sub>2 \<and> s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2 \<longrightarrow> tr\<^sub>1 \<approx>\<^sub>\<L> tr\<^sub>2"
+  assume "\<forall>cs\<^sub>1 ctr\<^sub>1 cs\<^sub>2 ctr\<^sub>2 s\<^sub>1 tr\<^sub>1 s\<^sub>2 tr\<^sub>2. istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 \<and> istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<and> 
+validFromS\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 ctr\<^sub>1 \<and> validFromS\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 ctr\<^sub>2 \<and> validFromS\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 tr\<^sub>1 \<and> validFromS\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 tr\<^sub>2 \<and> completedFrom\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 ctr\<^sub>1 \<and> completedFrom\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 ctr\<^sub>2 \<and> completedFrom\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 tr\<^sub>1 \<and> completedFrom\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 tr\<^sub>2 \<and> U\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 \<and> U\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> U\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> U\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> ctr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<longrightarrow> tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
     and "U\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1"
     and "U\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2"
     and "U\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1"
@@ -136,9 +144,9 @@ next
     and "ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
     and "ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1"
     and "ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
-    and "hd tr\<^sub>1 \<approx>\<^sub>\<L> hd tr\<^sub>2"
-    and "ctr\<^sub>1 \<approx>\<^sub>\<L> ctr\<^sub>2"
-  thus "tr\<^sub>1 \<approx>\<^sub>\<L> tr\<^sub>2"
+    and "hd tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t hd tr\<^sub>2"
+    and "ctr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2"
+  thus "tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
     apply -
     apply (erule allE[where x = \<open>hd ctr\<^sub>1\<close>], erule allE[where x = ctr\<^sub>1])
     apply (erule allE[where x = \<open>hd ctr\<^sub>2\<close>], erule allE[where x = ctr\<^sub>2])
@@ -154,9 +162,6 @@ abbreviation \<open>getSec\<^sub>o\<^sub>p\<^sub>t \<equiv> Opt.getSec\<close> l
 abbreviation \<open>getObs\<^sub>v\<^sub>a\<^sub>n \<equiv> Van.getObs\<close> lemmas getObs\<^sub>v\<^sub>a\<^sub>n_def = Van.getObs_def
 abbreviation \<open>getObs\<^sub>o\<^sub>p\<^sub>t \<equiv> Opt.getObs\<close> lemmas getObs\<^sub>o\<^sub>p\<^sub>t_def = Opt.getObs_def
 
-(*
-abbreviation \<open>B\<^sub>v\<^sub>a\<^sub>n \<equiv> Van.B\<close> lemmas B\<^sub>v\<^sub>a\<^sub>n_def = Van.B_def
-*)
 definition
   B\<^sub>v\<^sub>a\<^sub>n :: \<open>'vstate \<Rightarrow> ('lowOp \<times> 'highOp) list \<Rightarrow> 'vstate \<Rightarrow> ('lowOp \<times> 'highOp) list \<Rightarrow> bool\<close> 
 where  
@@ -170,7 +175,7 @@ where
 definition
   B\<^sub>o\<^sub>p\<^sub>t :: \<open>'ostate \<Rightarrow> ('lowOp \<times> 'highOp) list \<Rightarrow> 'ostate \<Rightarrow> ('lowOp \<times> 'highOp) list \<Rightarrow> bool\<close> 
 where  
-  \<open>B\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 sl\<^sub>1 s\<^sub>2 sl\<^sub>2 \<equiv> s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2 \<and> unzipL sl\<^sub>1 = unzipL sl\<^sub>2\<close>
+  \<open>B\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 sl\<^sub>1 s\<^sub>2 sl\<^sub>2 \<equiv> s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<and> unzipL sl\<^sub>1 = unzipL sl\<^sub>2\<close>
 
 sublocale asCBD: Cond_BD_Security_STS
   where istate\<^sub>v\<^sub>a\<^sub>n = istate\<^sub>v\<^sub>a\<^sub>n and istate\<^sub>o\<^sub>p\<^sub>t = istate\<^sub>o\<^sub>p\<^sub>t
@@ -220,8 +225,8 @@ unfolding secure_alt_def proof safe
     and "ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
     and "ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1"
     and "ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
-    and "hd tr\<^sub>1 \<approx>\<^sub>\<L> hd tr\<^sub>2"
-    and "ctr\<^sub>1 \<approx>\<^sub>\<L> ctr\<^sub>2"
+    and "hd tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t hd tr\<^sub>2"
+    and "ctr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2"
     and U: \<open>U\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1\<close> \<open>U\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2\<close> \<open>U\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1\<close> \<open>U\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2\<close>
   hence \<open>asCBD.O\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 = asCBD.O\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2\<close>
     using assms 
@@ -235,14 +240,14 @@ unfolding secure_alt_def proof safe
     unfolding S_ops\<^sub>o\<^sub>p\<^sub>t S_ops\<^sub>v\<^sub>a\<^sub>n U\<^sub>v\<^sub>a\<^sub>n_def[symmetric] U\<^sub>o\<^sub>p\<^sub>t_def[symmetric]
     apply (intro conjI Van.lowEquivs_imp_O zip_injectI)
     by simp_all
-  thus "tr\<^sub>1 \<approx>\<^sub>\<L> tr\<^sub>2"
+  thus "tr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
     by (rule Opt.O_imp_lowEquivs)
 qed
 
 
 (* TODO goal is to drop \<Theta> to just two ops lists *)
 
-abbreviation \<open>\<Lambda> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<equiv> s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2 \<and> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 
+abbreviation \<open>\<Lambda> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<equiv> s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<and> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 
   \<and> unzipL vl\<^sub>1 = unzipL vl\<^sub>2 \<and> unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close>
 
 definition \<open>proaction \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 \<equiv> Opt.unwindFor (\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2)\<close>
@@ -261,7 +266,7 @@ lemma unobservable[simp]: \<open>asCBD.unobservable cs\<close>
 abbreviation \<open>consume\<^sub>o\<^sub>p\<^sub>t \<equiv> Opt.consume\<close> lemmas consume\<^sub>o\<^sub>p\<^sub>t_def = Opt.consume_def
 
 lemma lowEquiv_finish: 
-  \<open>s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2 \<Longrightarrow> asCBD.Opt.finish s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+  \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<Longrightarrow> asCBD.Opt.finish s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
 unfolding asCBD.Opt.finish_def eqObs\<^sub>o\<^sub>p\<^sub>t_def sketch (intro impI Opt.lowEquiv_imp_getObs, elim conjE)
 proof (intro impI Opt.lowEquiv_imp_getObs, elim conjE)
   assume "isInter\<^sub>o\<^sub>p\<^sub>t s\<^sub>1" "final\<^sub>o\<^sub>p\<^sub>t s\<^sub>1"
@@ -273,7 +278,7 @@ abbreviation \<open>unwindForOD \<equiv> Opt.unwindFor\<close>
 thm Opt.unwindFor_asBD asCBD.Opt.unwindFor_impI
 lemma unwindForOD_asCBD:
   assumes unwind: \<open>unwindForOD (\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2) s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
-      and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2\<close> 
+      and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> 
                   \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close>
                   \<open>\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
                   \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close>
@@ -282,12 +287,12 @@ lemma unwindForOD_asCBD:
   using others(6-) by simp
 
 definition \<open>finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<equiv>
-  final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> cvl\<^sub>1 = [] \<and> cvl\<^sub>2 = [] \<and> cs\<^sub>1 \<approx>\<^sub>\<L> cs\<^sub>2 \<longrightarrow>
+  final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> cvl\<^sub>1 = [] \<and> cvl\<^sub>2 = [] \<and> cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<longrightarrow>
   Opt.unwindFor (\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2) s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
 
 lemma finish_asCBD:
   assumes finish: \<open>finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> 
-      and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close> 
+      and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close> 
                   \<open>\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close> 
     shows \<open>asCBD.finish (\<Lambda> \<Theta>) cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
 unfolding asCBD.finish_def sketch (intro impI; elim conjE)
@@ -314,9 +319,9 @@ qed
 
 lemma unwindForOD'_asBD:
   assumes unwind: \<open>unwindForOD (\<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> 
-      and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close>
+      and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close>
                   "asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 cvl\<^sub>1 cvl\<^sub>1'""asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 cvl\<^sub>2'"
-                  \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close> \<open>cs\<^sub>1 \<approx>\<^sub>\<L> cs\<^sub>2\<close>
+                  \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close> \<open>cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<close>
       and \<Theta>: \<open>\<lbrakk>final\<^sub>o\<^sub>p\<^sub>t s\<^sub>1; final\<^sub>o\<^sub>p\<^sub>t s\<^sub>2; vl\<^sub>1 = []; vl\<^sub>2 = []\<rbrakk> \<Longrightarrow> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2' s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
     shows \<open>asCBD.Opt.unwindFor (\<Lambda> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
   using unwind others(1-3) apply (rule asCBD.Opt.unwindFor_impI [OF Opt.unwindFor_asBD])
@@ -333,7 +338,7 @@ lemma unwindForOD'_asBD:
 
 definition \<open>saction \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<equiv> \<forall>cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2'.
   validTrans\<^sub>v\<^sub>a\<^sub>n (cs\<^sub>1, cs\<^sub>1') \<and> asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 cvl\<^sub>1 cvl\<^sub>1' \<and> validTrans\<^sub>v\<^sub>a\<^sub>n (cs\<^sub>2, cs\<^sub>2') \<and>
-    asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 cvl\<^sub>2' \<and> cs\<^sub>1 \<approx>\<^sub>\<L> cs\<^sub>2 \<and> \<not>(final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2)
+    asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 cvl\<^sub>2' \<and> cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> \<not>(final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2)
 \<longrightarrow>
   asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1' cvl\<^sub>1' \<or> asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2' cvl\<^sub>2' \<or> 
     ((final\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 \<and> final\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<longrightarrow> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2' s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2) \<and> unwindForOD (\<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2)\<close>
@@ -341,7 +346,7 @@ definition \<open>saction \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2
 lemma saction_asCBD:
   assumes saction: \<open>saction \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> 
       and finish: \<open>finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> 
-      and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close>
+      and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close>
             \<open>\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close>
     shows \<open>asCBD.saction (\<Lambda> \<Theta>) cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
 unfolding asCBD.saction_def sketch (intro allI impI; elim conjE; intro disj_notI1)
@@ -387,7 +392,7 @@ definition unwind where
 "unwind \<Theta> \<equiv>
  \<forall> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2.
    asCBD.reachNT\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> asCBD.reachNT\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> asCBD.reachNT\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 \<and> asCBD.reachNT\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<and> 
-   \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<and> s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2
+   \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<and> s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2
    \<longrightarrow>
    asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 cvl\<^sub>1 \<or> asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 \<or> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1 \<or> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2
    \<or>
@@ -407,7 +412,7 @@ lemma unwind_asCBDI:
 unfolding asCBD.unwind_def proof (intro allI impI, elim conjE)
   fix cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2
   assume r: \<open>asCBD.reachNT\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1\<close> \<open>asCBD.reachNT\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<close> \<open>asCBD.reachNT\<^sub>o\<^sub>p\<^sub>t s\<^sub>1\<close> \<open>asCBD.reachNT\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close>
-    and \<L>: \<open>s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2\<close>
+    and \<L>: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close>
     and \<Theta>: \<open>\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
     and lops_eq: \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close>
     and clops_eq: \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close>
@@ -453,7 +458,7 @@ unfolding asCBD.unwind_def proof (intro allI impI, elim conjE)
 qed
 
 lemma unwind_secure:
-  assumes init: \<open>(\<And>cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2. \<lbrakk>s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2; unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2;
+  assumes init: \<open>(\<And>cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2. \<lbrakk>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2; unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2;
               unzipL vl\<^sub>1 = unzipL vl\<^sub>2; cvl\<^sub>1 = vl\<^sub>1; cvl\<^sub>2 = vl\<^sub>2;
               istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1; istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2; istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1; istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<rbrakk> 
             \<Longrightarrow> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2)\<close>
@@ -463,7 +468,7 @@ proof (rule asCBD_secureI [OF asCBD.unwind_secure [where \<Delta> = \<open>\<Lam
   fix cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 
   assume B: "asCBD.B cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
     and istate: "istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1" "istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2"  "istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1"  "istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>2"
-  also have asm: \<open>s\<^sub>1 \<approx>\<^sub>\<L> s\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close> \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>cvl\<^sub>1 = vl\<^sub>1\<close> 
+  also have asm: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close> \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>cvl\<^sub>1 = vl\<^sub>1\<close> 
                 \<open>cvl\<^sub>2 = vl\<^sub>2\<close>
     using B
     unfolding asCBD.B_def case_prod_beta fst_conv snd_conv apply auto

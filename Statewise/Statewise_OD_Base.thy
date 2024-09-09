@@ -6,11 +6,13 @@ begin
 
 
 locale Statewise_OD_Base = System_Model istate validTrans final
-  for istate :: \<open>('state::low_equiv) \<Rightarrow> bool\<close> and validTrans :: \<open>'state \<times> 'state \<Rightarrow> bool\<close>
+  for istate :: \<open>'state \<Rightarrow> bool\<close> and validTrans :: \<open>'state \<times> 'state \<Rightarrow> bool\<close>
   and final :: \<open>'state \<Rightarrow> bool\<close>
 + 
   fixes isInter :: \<open>'state \<Rightarrow> bool\<close> 
-    and op\<^sub>\<L> :: \<open>'state \<Rightarrow> 'lowOp\<close> and op\<^sub>\<H> :: "'state \<Rightarrow> 'highOp"
+    and op\<^sub>\<L> :: \<open>'state \<Rightarrow> 'lowOp\<close> 
+    and low_equiv :: \<open>'state \<Rightarrow> 'state \<Rightarrow> bool\<close> (infixl \<open>\<approx>\<^sub>\<L>\<close> 100)
+    and op\<^sub>\<H> :: "'state \<Rightarrow> 'highOp"
     and u :: "'state \<Rightarrow> bool"
 
   assumes isInter_not_final: \<open>\<And>x. final x \<Longrightarrow> \<not> isInter x\<close>
@@ -53,9 +55,9 @@ lemma secure_alt_def: \<open>secure =
 
 
 (* TODO - introduce later*)
-lemma list_all2_lemmas_lowEquivs: \<open>list_all2_lemmas (\<approx>\<^sub>\<L>) (\<approx>\<^sub>\<L>)\<close>
+lemma list_all2_lemmas_lowEquivs: \<open>list_all2_lemmas (\<approx>\<^sub>\<L>\<^sub>s) (\<approx>\<^sub>\<L>)\<close>
   apply (standard)
-  using low_equiv_list_def by blast
+  by blast
 
 text \<open>OD as instance of \<forall>\<forall> BD Security:\<close>
 
@@ -127,24 +129,24 @@ by(induct tr, auto)
 lemma O_eq_lengthD: \<open>asBD.O tr = asBD.O tr' \<Longrightarrow> length tr = length tr'\<close>
   using O_length by metis
 
-interpretation lowEquivs: list_all2_lemmas \<open>(\<approx>\<^sub>\<L>)\<close> \<open>(\<approx>\<^sub>\<L>)\<close>
+interpretation lowEquivs: list_all2_lemmas \<open>(\<approx>\<^sub>\<L>\<^sub>s)\<close> \<open>(\<approx>\<^sub>\<L>)\<close>
   by (rule list_all2_lemmas_lowEquivs)
 
 lemma O_imp_lowEquivs:
   assumes O: \<open>asBD.O tr = asBD.O tr'\<close>
-    shows \<open>tr \<approx>\<^sub>\<L> tr'\<close>
+    shows \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close>
 using assms proof -
   assume O: \<open>asBD.O tr = asBD.O tr'\<close>
   have len_tr: \<open>length tr = length tr'\<close>
     using O by (rule O_eq_lengthD)
-  show \<open>tr \<approx>\<^sub>\<L> tr'\<close>
+  show \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close>
     using len_tr O apply (induct tr tr' rule: list_induct2)
     apply auto
     by (intro lowEquivs.ConsI getObs_imp_lowEquiv)    
 qed
 
 lemma lowEquivs_imp_O:
-  assumes \<open>tr \<approx>\<^sub>\<L> tr'\<close> \<open>ops\<^sub>\<L> tr = ops\<^sub>\<L> tr'\<close>
+  assumes \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close> \<open>ops\<^sub>\<L> tr = ops\<^sub>\<L> tr'\<close>
     shows \<open>asBD.O tr = asBD.O tr'\<close>
 using assms proof (induct rule: lowEquivs.inducts)
   case (Cons x xs y ys)

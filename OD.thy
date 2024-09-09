@@ -1,40 +1,30 @@
 theory OD
-  imports Main
+  imports HOL.List
 begin
+
 
 type_synonym 'state trace = \<open>'state list\<close>
 
-class low_equiv =
-  fixes low_equiv :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close> (infixl \<open>\<approx>\<^sub>\<L>\<close> 100)
-
-
-instantiation list :: (low_equiv) low_equiv 
-begin
-
-definition
-  low_equiv_list :: \<open>'a list \<Rightarrow> 'a list \<Rightarrow> bool\<close>
-where
-  \<open>low_equiv_list \<equiv> list_all2 low_equiv\<close>
-
-instance ..
-
-end
-
-
 text \<open>Definition of OD\<close>
 
-locale OD =
-  fixes Tr :: \<open>('state::low_equiv) trace set\<close>
+locale OD = 
+  fixes Tr :: \<open>'state trace set\<close>
     and ops\<^sub>\<L> :: \<open>'state trace \<Rightarrow> 'lop\<close>
+    and low_equiv :: \<open>'state \<Rightarrow> 'state \<Rightarrow> bool\<close> (infixl \<open>\<approx>\<^sub>\<L>\<close> 100)
 begin
+
+abbreviation 
+  low_equivs :: \<open>'state trace \<Rightarrow> 'state trace \<Rightarrow> bool\<close>  (infixl \<open>\<approx>\<^sub>\<L>\<^sub>s\<close> 100)
+where
+  \<open>low_equivs \<equiv> list_all2 low_equiv\<close> 
 
 abbreviation
   secureFor :: \<open>'state trace \<Rightarrow> 'state trace \<Rightarrow> bool\<close>
 where
-  \<open>secureFor \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> ops\<^sub>\<L> \<pi>\<^sub>1 = ops\<^sub>\<L> \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 \<approx>\<^sub>\<L> \<pi>\<^sub>2\<close>
+  \<open>secureFor \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> ops\<^sub>\<L> \<pi>\<^sub>1 = ops\<^sub>\<L> \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s \<pi>\<^sub>2\<close>
 
 lemma secureFor_empty[simp]: \<open>secureFor [] []\<close>
-  unfolding low_equiv_list_def by auto
+  by auto
 
 definition
   secure :: bool

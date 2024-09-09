@@ -1,6 +1,6 @@
 theory Transition_System
   imports Trivia_Extensions 
-          "Relative_Security.Transition_System"         
+          (* "Relative_Security.Transition_System" *)    
 begin
 
 text \<open>Point of Departure from Andrei's BD Security :'( as 

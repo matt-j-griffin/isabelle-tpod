@@ -1,6 +1,6 @@
 theory Statewise_OD
   imports
-    "../Duplicate/BD_Security_STS"
+    "../ForAllForAllSecure/BD_Security_STS"
     "../OD"
     "HOL-ex.Sketch_and_Explore" (* TODO *)
 begin

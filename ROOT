@@ -1,11 +1,10 @@
 chapter AFP
 
-session TPOD (AFP) = Main +
+session TPOD (AFP) = Bounded_Deducibility_Security +
   options [timeout = 900]
   sessions
     "HOL-ex"
     Relative_Security
-    Bounded_Deducibility_Security
   directories
     General_Preliminaries
     Cheang

@@ -1,5 +1,5 @@
 theory Statewise_OD_Base
-  imports "../Duplicate/BD_Security_STS"
+  imports "../ForAllForAllSecure/BD_Security_STS"
           "../OD"
           "HOL-ex.Sketch_and_Explore" (* TODO *)
 begin

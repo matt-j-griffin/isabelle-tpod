@@ -1,7 +1,7 @@
 theory Statewise_CTPOD
   imports "../CTPOD"
     Statewise_OD_Base
-    "../Duplicate/Cond_BD_Security_STS"
+    "../ForAllForAllSecure/Cond_BD_Security_STS"
 begin
 
 locale Statewise_CTPOD = 

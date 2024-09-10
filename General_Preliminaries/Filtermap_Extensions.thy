@@ -1,5 +1,7 @@
 theory Filtermap_Extensions
-  imports Infinitary_Filtermap
+  imports 
+    Bounded_Deducibility_Security.Filtermap
+    Trivia_Extensions
 begin
 
 
@@ -8,7 +10,7 @@ begin
 (used in the relative security unwinding proof soundness)  *)
 
 
-
+(*
 context TwoFuncPred
 begin
 
@@ -62,7 +64,7 @@ proof-
     unfolding P_def apply clarsimp apply (erule sssameL.cases)
     apply (auto simp: TWW_def less_turn_def)+ by blast . .
 qed
- 
+
 
 (* *)
 
@@ -165,7 +167,7 @@ proof-
 qed
 
 end (* context TwoFuncPred *)
-
+*)
 
 
 (* Abstract filtermap locale, applicable to several operators: *)

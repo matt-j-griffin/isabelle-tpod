@@ -1,6 +1,9 @@
 theory Trivia_Extensions
-  imports "Bounded_Deducibility_Security.Trivia" 
-    "Coinductive.Coinductive_List"
+  imports 
+    "Bounded_Deducibility_Security.Trivia" 
+    (*"Relative_Security.RS_Trivia" *)
+(*    "Coinductive.Coinductive_List"*)
+    "HOL-ex.Sketch_and_Explore" (* TODO *)
 begin
 
 (* TODO check a lot of this for unused/duplicate theorems *)
@@ -14,7 +17,7 @@ lemma True_not_False: \<open>True = (\<not> False)\<close>
 lemma all_ex_P:
   assumes "\<forall>s. P s" "\<And>s. P s = Q s" shows "\<exists>s. Q s"
   using assms by auto
-
+(*
 instantiation option :: (type) bot
 begin
 
@@ -29,7 +32,7 @@ end
 
 lemma Some_bot_simps[simp]: \<open>Some x \<noteq> \<bottom>\<close> \<open>\<bottom> \<noteq> Some y\<close>
   unfolding bot_option_def by simp_all
-
+*)
 lemma ball_inE:
   assumes major: "\<forall>x\<in>S. P x" and "x\<in>S"
       and minor: "P x \<Longrightarrow> R"
@@ -232,7 +235,7 @@ lemma append_take_nth_drop: "n < length xs \<Longrightarrow>
 by (metis append_take_drop_id drop_Suc)   
 
 lemmas list_all_nth = list_all_length
-
+(*
 (* *)
 (* Lazy list notations: *)
 
@@ -541,7 +544,7 @@ by auto
 
 lemma butlast_list_of: "lfinite xs \<Longrightarrow> butlast (list_of xs) = list_of (lbutlast xs)"
   by simp
-
+*)
 lemma not_allI: "(\<exists>x. \<not>R x) \<Longrightarrow> \<not>(\<forall>x. R x)"
   by simp
 
@@ -1777,7 +1780,7 @@ lemma butlast_append2[simp]: "butlast (ys @ [y, y']) = (ys @ [y])"
   by (metis butlast_append butlast_snoc list.discI two_singl_Rcons)
 
 
-
+(*
 (* *)
 abbreviation lnever :: "('a \<Rightarrow> bool) \<Rightarrow> 'a llist \<Rightarrow> bool" where "lnever U \<equiv> llist_all (\<lambda> a. \<not> U a)"
 
@@ -1785,7 +1788,7 @@ abbreviation lnever :: "('a \<Rightarrow> bool) \<Rightarrow> 'a llist \<Rightar
 
 lemma llast_last_llist_of: "lfinite xs \<Longrightarrow> llast xs = last (list_of xs)"
 by (metis llast_llist_of llist_of_list_of)
-
+*)
 (* *)
 
 
@@ -1823,7 +1826,7 @@ lemma map_write_read:
       and \<open>distinct a\<close>
     shows \<open>map (\<mu>\<^sub>\<pi>(a [\<mapsto>] v)) a = map Some v\<close>
   using assms by (induct a v rule: list_induct2, simp_all)
-
+(*
 lemma butlast_length_le1[simp]: "llength xs \<le> Suc 0 \<Longrightarrow> lbutlast xs = [[]]"
  by (metis One_nat_def antisym_conv2 enat_ile epred_1 epred_conv_minus 
 iless_Suc_eq lbutlast_LNil le_zero_eq lfinite_conv_llength_enat llength_eq_0 
@@ -1853,16 +1856,16 @@ unfolding ccorec_llist_def llist.corec(2)
 by (cases " e a", auto simp: lnull_def) 
 
 lemmas llist_ccorec = llist_ccorec_LNil llist_ccorec_LCons
+*)
 
-
-(* *)
+(* 
 thm list_all_nth[no_vars]
 
 lemma llist_all_lnth: "llist_all P xs = (\<forall>n<llength xs. P (lnth xs n))"
 by (metis in_lset_conv_lnth llist.pred_set)
 
 
-(* *)
+ *)
 
 definition "takeUntil pred xs \<equiv> 
   append (takeWhile (\<lambda>x. \<not> pred x) xs) [hd (dropWhile (\<lambda>x. \<not> pred x) xs)]"
@@ -1901,7 +1904,7 @@ shows "takeUntil pred xs = append (butlast (takeUntil pred xs)) [last (takeUntil
 by (simp add: assms takeUntil_not_Nil)
 
 (* INFRASTRUCTURE FOR FINITE-INFINITE SHIFT IN UNWINDING RESULTS *)
-
+(*
 declare lconcat_eq_LNil_iff[simp del]
 
 definition "ltakeUntil pred xs \<equiv> 
@@ -2435,7 +2438,7 @@ using k_not_in assms(1) proof safe
 
 lemma ib_shrink[intro]:"llength ib = \<infinity> \<Longrightarrow> llength (ltl ib) = \<infinity>"
   by (metis epred_Infty epred_llength)
-
+*)
 lemma set_neq_exists: \<open>(\<exists>x. x \<notin> A \<and> x \<in> B) \<Longrightarrow> A \<noteq> B\<close>
   by auto
 

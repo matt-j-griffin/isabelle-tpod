@@ -2,18 +2,20 @@
 
 
 theory BD_Security_STS
-  imports (*Abstract_BD_Security*) 
+  imports
     "Abstract_BD_Security_Extensions" 
     "../General_Preliminaries/Filtermap_Extensions" 
     "../General_Preliminaries/Transition_System_Extensions"
     "HOL-ex.Sketch_and_Explore" (* TODO *)
 begin
 
+(* TODO *)
 
 declare Let_def[simp]
 
 no_notation relcomp (infixr "O" 75)
-
+no_notation Trivia.Rcons (infix "##" 70)
+no_notation Trivia.lmember ("(_/ \<in>\<in> _)" [50, 51] 50)
 
 locale BD_Security_STS = System_Model istate validTrans final
   for istate :: "'state \<Rightarrow> bool" and validTrans :: "('state \<times> 'state) \<Rightarrow> bool"
@@ -38,8 +40,8 @@ definition S :: "'state list \<Rightarrow> 'secret list" where "S \<equiv> filte
 (* The observation function: *)
 definition O :: "'state trace \<Rightarrow> 'obs list" where "O \<equiv> filtermap isObs getObs"
 
-lemma O_map_filter: "O tr = map getObs (filter isObs tr)" unfolding O_def filtermap_map_filter ..
-lemma S_map_filter: "S tr = map getSec (filter isSec tr)" unfolding S_def filtermap_map_filter ..
+lemma O_map_filter: "O tr = map getObs (filter isObs tr)" unfolding O_def filtermap_def ..
+lemma S_map_filter: "S tr = map getSec (filter isSec tr)" unfolding S_def filtermap_def ..
 
 lemma O_never[simp]: \<open>([] = O tr) \<longleftrightarrow> never isObs tr\<close> \<open>(O tr = []) \<longleftrightarrow> never isObs tr\<close>
   unfolding O_def apply auto
@@ -83,7 +85,7 @@ lemma S_Nil_never: "S tr = [] \<longleftrightarrow> never isSec tr"
 unfolding S_def using filtermap_Nil_never by auto
 
 lemma Nil_S_never: "[] = S tr \<longleftrightarrow> never isSec tr"
-unfolding S_def filtermap_map_filter by (induction tr) auto
+unfolding S_def filtermap_def by (induction tr) auto
 
 lemma length_V: "length (S tr) \<le> length tr"
 by (auto simp: S_def length_filtermap)
@@ -123,7 +125,7 @@ lemma O_Nil_never: "O tr = [] \<longleftrightarrow> never isObs tr"
 unfolding O_def using filtermap_Nil_never by auto
 
 lemma Nil_O_never: "[] = O tr \<longleftrightarrow> never isObs tr"
-unfolding O_def filtermap_map_filter by (induction tr) auto
+unfolding O_def filtermap_def by (induction tr) auto
 
 lemma length_O: "length (O tr) \<le> length tr"
 by (auto simp: O_def length_filtermap)
@@ -239,14 +241,15 @@ shows "Inv s"
 using a using h i unfolding holdsIstate_def invarNT_def
 apply (induct rule: reachNT.induct) by auto 
 
-abbreviation \<open>validTrace tr \<equiv> istate (hd tr) \<and> validFromS (hd tr) tr \<and> completedFrom (hd tr) tr\<close>
+abbreviation 
+  \<open>validTrace tr \<equiv> istate (hd tr) \<and> validFromS (hd tr) tr \<and> completedFrom (hd tr) tr \<and> tr \<noteq> []\<close>
 
 
 
 definition 
   produces
 where
-  \<open>produces P cs \<equiv> (\<forall>ctr. validFromS cs ctr \<and> never T ctr \<longrightarrow> list_ex P ctr)\<close>
+  \<open>produces P cs \<equiv> (\<forall>ctr. validFromS cs ctr \<and> ctr \<noteq> [] \<and> never T ctr \<longrightarrow> list_ex P ctr)\<close>
 
 
 (* This is syntactic sugar for the command
@@ -357,12 +360,13 @@ lemma consume_notSecE:
 
 (* No trace starting in state s can produce the values vl: *)
 definition hopeless :: "'state \<Rightarrow> 'secret list \<Rightarrow> bool" where 
-"hopeless s vl \<equiv> \<forall>tr. validFromS s tr \<and> never T tr \<longrightarrow> S tr \<noteq> vl"
+"hopeless s vl \<equiv> \<forall>tr. validFromS s tr \<and> tr \<noteq> [] \<and> never T tr \<longrightarrow> S tr \<noteq> vl"
 
 lemma final_allE:
-  assumes f: \<open>final s\<close> and valid: \<open>validFromS s tr\<close> and E: \<open>list_all final tr \<Longrightarrow> P\<close> shows P
+  assumes f: \<open>final s\<close> and valid: \<open>validFromS s tr\<close> and tr: \<open>tr \<noteq> []\<close>
+      and E: \<open>list_all final tr \<Longrightarrow> P\<close> shows P
   apply (rule E)
-  using valid[unfolded validFromS_def] apply (elim conjE)
+  using valid[unfolded validFromS_def] tr apply (elim disjE conjE, simp)
   using f apply - 
   apply (induct tr arbitrary: s rule: list_nonempty_induct)
   apply auto
@@ -595,13 +599,14 @@ qed
 
 
 lemma not_hopeless_final_secrets:
-  assumes major: \<open>\<not>hopeless s vl\<close> \<open>final s\<close> \<open>isSec s\<close> 
+  assumes major: \<open>\<not>hopeless s vl\<close> \<open>final s\<close> \<open>isSec s\<close>
       and minor: \<open>vl \<noteq> [] \<Longrightarrow> P\<close>
     shows P
   apply (rule minor)
   using major unfolding hopeless_def apply safe
   apply (erule validFromS_alwaysE[where Q = isSec], assumption+)
-  by (metis Nil_is_map_conv list_all_S_map  validFromS_empty)
+  by (metis Nil_is_map_conv list_all_S_map)
+
 
 lemma not_hopeless_final_no_secrets:
   assumes major: \<open>\<not>hopeless s vl\<close> \<open>final s\<close> \<open>\<not>isSec s\<close> 
@@ -677,26 +682,24 @@ lemma filtermap_Nil_never_rhs[simp]: "([] = filtermap pred func tr) \<longleftri
   by (metis filtermap_Nil_never)
 
 definition \<open>\<psi> \<Delta> tr tr1 \<equiv> (\<forall>y1 y2 s s1 vl vl1. length y1 + length y2 < length tr + length tr1 \<longrightarrow>
-           reachNT s \<longrightarrow>
-           reachNT s1 \<longrightarrow>
-           \<Delta> s vl s1 vl1 \<longrightarrow>
-           validFromS s y1 \<longrightarrow>
-           never T y1 \<longrightarrow>
-           completedFrom s y1 \<longrightarrow>
-           validFromS s1 y2 \<longrightarrow> never T y2 \<longrightarrow> completedFrom s1 y2 \<longrightarrow> S y1 = vl \<longrightarrow> S y2 = vl1 \<longrightarrow> O y1 = O y2)\<close>
+  reachNT s \<longrightarrow> reachNT s1 \<longrightarrow>
+  \<Delta> s vl s1 vl1 \<longrightarrow>
+  validFromS s y1 \<longrightarrow> never T y1 \<longrightarrow> completedFrom s y1 \<longrightarrow> y1 \<noteq> [] \<longrightarrow>
+  validFromS s1 y2 \<longrightarrow> never T y2 \<longrightarrow> completedFrom s1 y2 \<longrightarrow> y2 \<noteq> [] \<longrightarrow>
+  S y1 = vl \<longrightarrow> S y2 = vl1 \<longrightarrow> O y1 = O y2)\<close>
 
 (* main *) proposition unwind_via_\<psi>:
   assumes unwind: "unwindFor \<Delta> s vl s1 vl1" and r: "reachNT s" "reachNT s1"
 and \<psi>: \<open>\<psi> \<Delta> tr tr1\<close>
-and vn: "validFromS s tr" "never T tr" "completedFrom s tr" 
-        "validFromS s1 tr1" "never T tr1" "completedFrom s1 tr1"
+and vn: "validFromS s tr" "never T tr" "completedFrom s tr" "tr \<noteq> []"
+        "validFromS s1 tr1" "never T tr1" "completedFrom s1 tr1" "tr1 \<noteq> []"
 and S: "S tr = vl" "S tr1 = vl1"
 shows "O tr = O tr1"
 proof- 
   (* easier to work with *)
   have \<psi>: \<open>\<And>y1 y2 s s1 vl vl1. \<lbrakk>length y1 + length y2 < length tr + length tr1; reachNT s; reachNT s1;
-          \<Delta> s vl s1 vl1; validFromS s y1;never T y1;completedFrom s y1;
-          validFromS s1 y2;never T y2;completedFrom s1 y2; S y1 = vl; S y2 = vl1\<rbrakk> \<Longrightarrow> O y1 = O y2\<close>
+          \<Delta> s vl s1 vl1; validFromS s y1;never T y1;completedFrom s y1; y1 \<noteq> [];
+          validFromS s1 y2;never T y2;completedFrom s1 y2; y2 \<noteq> []; S y1 = vl; S y2 = vl1\<rbrakk> \<Longrightarrow> O y1 = O y2\<close>
     using \<psi> unfolding \<psi>_def by auto
   have fin: "finish s vl s1 vl1" and 
        ial: "iactionLeft \<Delta> s vl s1 vl1" and 
@@ -712,7 +715,7 @@ proof-
         using vn by auto
       have consume: \<open>consume s vl []\<close>
         using S(1) unfolding tr by (drule_tac S_Cons_consume, simp)
-      note RIH = \<psi>[OF _ r(1) _ _ vn(1-3) _ _ _ S(1), simplified] 
+      note RIH = \<psi>[OF _ r(1) _ _ vn(1-4) _ _ _ _ S(1), simplified] 
       show ?thesis
       proof(cases \<open>length tr1 \<le> 1\<close>)
         case True
@@ -732,7 +735,7 @@ proof-
           apply (cases tr1, auto)
           subgoal for _ tr1'
             apply (cases tr1', auto)
-            using vn(4) validFromS_Cons_iff by auto
+            using vn(5) validFromS_Cons_iff by auto
           .
         have trn1: \<open>validTrans (s1, s1')\<close>
           using vn trr1 validFromS_Cons_iff by auto
@@ -746,7 +749,8 @@ proof-
           using S_Cons_consume[OF `S tr1 = vl1`[unfolded trr1]]
           by blast
         hence nh1': "\<not> hopeless s1' vl1'" 
-          unfolding hopeless_def by (metis vn(5) list_all_simps(1) tr1(1) trr1)
+          unfolding hopeless_def apply auto
+          using tr1(1) tr1(2) by blast
         have not_g: "\<not> isObs s1"
         proof 
           assume getObs: "isObs s1"
@@ -757,7 +761,7 @@ proof-
         have D: "\<Delta> s vl s1' vl1'" 
         using iar nh1' not_g trn1 vl1' trn1(1) unfolding iactionRight_def by force
         have "O tr = O (s1' # tr1')"
-          apply (rule RIH[OF _ s1' D tr1 Vtr1])
+          apply (rule RIH[OF _ s1' D tr1 _ Vtr1])
           using trr1 by auto
         thus ?thesis unfolding trr1 using not_g by auto
       qed       
@@ -780,8 +784,9 @@ proof-
         using S_Cons_consume[OF `S tr = vl`[unfolded trr]]
         by blast
       hence nh': "\<not> hopeless s' vl'" 
-        unfolding hopeless_def using vn(2) list_all_simps(1) tr(1) trr by metis
-      note LIH = \<psi>[OF _ s' _ _ tr _ _ _ Vtr, unfolded trr, simplified] 
+        unfolding hopeless_def apply auto
+        using tr(1) tr(2) by blast
+      note LIH = \<psi>[OF _ s' _ _ tr _ _ _ _ _ Vtr, unfolded trr, simplified] 
       show ?thesis
       proof(cases \<open>length tr1 \<le> 1\<close>)
         case True
@@ -805,7 +810,7 @@ proof-
         have D: "\<Delta> s' vl' s1 vl1" 
           using isntL nh' not_g  by force
         have "O (s' # tr') = O tr1"
-          by (rule LIH[OF _ r(2) D vn(4-) S(2), simplified])
+          by (rule LIH[OF _ r(2) D vn(5-8) S(2), simplified])
         thus ?thesis unfolding trr using not_g by auto
       next
         case False
@@ -827,14 +832,15 @@ proof-
           using S_Cons_consume[OF `S tr1 = vl1`[unfolded trr1]]
           by blast
         hence nh1': "\<not> hopeless s1' vl1'" 
-          unfolding hopeless_def by (metis vn(5) list_all_simps(1) tr1(1) trr1)
+          unfolding hopeless_def apply auto
+          using tr1(1) tr1(2) by blast
         thus ?thesis  
         proof(cases "isObs s")
           case False note not_g = False 
           have D: "\<Delta> s' vl' s1 vl1 " 
             using ial nh' not_g trn vl' trn(1) unfolding iactionLeft_def by force
           have "O (s' # tr') = O tr1"
-            by (rule LIH[OF _ r(2) D vn(4-) S(2), simplified])
+            by (rule LIH[OF _ r(2) D vn(5-8) S(2), simplified])
           thus ?thesis unfolding trr using not_g by auto
         next
           case True note getObs = True
@@ -852,7 +858,7 @@ proof-
             have D: "\<Delta> s' vl' s1' vl1'" and geq: "getObs s = getObs s1"
               using sa nh' nh1' getObs g1 trn trn1 vl' vl1' trn1(1) unfolding saction_def by force+
             have "O (s' # tr') = O (s1' # tr1')"
-              by (rule LIH[OF _ s1' D tr1 Vtr1, unfolded trr1, simplified])
+              by (rule LIH[OF _ s1' D tr1 _ Vtr1, unfolded trr1, simplified])
             thus ?thesis unfolding trr trr1 using getObs g1 geq by auto
         qed
       qed
@@ -862,8 +868,8 @@ qed
 
 proposition unwind_trace:
 assumes unwind: "unwind \<Delta>" and r: "reachNT s" "reachNT s1" "\<Delta> s vl s1 vl1" 
-and vn: "validFromS s tr" "never T tr" "completedFrom s tr" 
-        "validFromS s1 tr1" "never T tr1" "completedFrom s1 tr1"
+and vn: "validFromS s tr" "never T tr" "completedFrom s tr" "tr \<noteq> []"
+        "validFromS s1 tr1" "never T tr1" "completedFrom s1 tr1" "tr1 \<noteq> []"
 and S: "S tr = vl" "S tr1 = vl1"
 shows "O tr = O tr1"
 proof- 
@@ -874,7 +880,7 @@ proof-
     have nh: "\<not> hopeless s vl \<and> \<not> hopeless s1 vl1" 
       using IH.prems unfolding hopeless_def by blast
     have uFor: \<open>unwindFor \<Delta> s vl s1 vl1\<close> 
-      using IH.prems(1-8) nh unwind  unfolding unwind_def validFromS_def
+      using IH.prems(1-11) nh unwind  unfolding unwind_def validFromS_def
       by (metis list_all_hd)+
     have \<psi>: \<open>\<psi> \<Delta> trr trr1\<close>
       unfolding \<psi>_def apply safe

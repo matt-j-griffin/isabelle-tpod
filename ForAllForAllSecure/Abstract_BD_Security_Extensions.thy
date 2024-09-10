@@ -1,14 +1,12 @@
 (*<*)
 theory Abstract_BD_Security_Extensions
-  imports "Bounded_Deducibility_Security.Abstract_BD_Security"
+  imports Bounded_Deducibility_Security.Abstract_BD_Security
 begin
 (*>*)
 
 section \<open>BD Security Extensions\<close>
 
 subsection \<open>ForAll-ForAll and ForAll-Exists secure\<close>
-
-no_notation relcomp (infixr "O" 75)
 
 context Abstract_BD_Security
 begin
@@ -23,7 +21,7 @@ text \<open>Alternate definition of security ForAll-ForAll-Secure, quantified un
 abbreviation
   ForAll_ForAll_Secure_For :: \<open>'traces \<Rightarrow> 'traces \<Rightarrow> bool\<close>
 where
-  \<open>ForAll_ForAll_Secure_For tr\<^sub>1 tr\<^sub>2 \<equiv> validSystemTrace tr\<^sub>1 \<and> validSystemTrace tr\<^sub>2 \<and> TT tr\<^sub>1 \<and> TT tr\<^sub>2 
+  \<open>ForAll_ForAll_Secure_For tr\<^sub>1 tr\<^sub>2 \<equiv> validSystemTrace tr\<^sub>1 \<and> validSystemTrace tr\<^sub>2 \<and> TT tr\<^sub>1 \<and> TT tr\<^sub>2
     \<and> B (V tr\<^sub>1) (V tr\<^sub>2) \<longrightarrow> O tr\<^sub>1 = O tr\<^sub>2\<close>
 
 definition 
@@ -38,7 +36,7 @@ lemma ForAll_ForAll_SecureE:
     shows \<open>O tr\<^sub>1 = O tr\<^sub>2\<close>
 using assms unfolding ForAll_ForAll_Secure_def by auto
 
-end (* context BD_Security *)
+end (* context Abstract_BD_Security *)
 
 (*<*)
 end

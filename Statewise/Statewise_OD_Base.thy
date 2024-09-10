@@ -39,16 +39,19 @@ definition \<open>ops\<^sub>\<L> = filtermap isInter op\<^sub>\<L>\<close>
 lemma ops\<^sub>\<L>_Cons_unfold: "ops\<^sub>\<L> (trn # tr) = (if isInter trn then op\<^sub>\<L> trn # ops\<^sub>\<L> tr else ops\<^sub>\<L> tr)"
   unfolding ops\<^sub>\<L>_def by auto
 
+
+abbreviation 
+  \<open>validTrace \<pi> \<equiv> istate (hd \<pi>) \<and> validFromS (hd \<pi>) \<pi> \<and> completedFrom (hd \<pi>) \<pi> \<and> \<pi> \<noteq> []\<close>
+
 sublocale OD
-  where Tr = \<open>{\<pi>. istate (hd \<pi>) \<and> validFromS (hd \<pi>) \<pi> \<and> completedFrom (hd \<pi>) \<pi>}\<close>
+  where Tr = \<open>{\<pi>. validTrace \<pi>}\<close>
     and ops\<^sub>\<L> = ops\<^sub>\<L>
     (*and lowEquiv = lowEquiv*)
   .
 
+
 lemma secure_alt_def: \<open>secure = 
-    (\<forall>\<pi>\<^sub>1 \<pi>\<^sub>2. istate (hd \<pi>\<^sub>1) \<and> validFromS (hd \<pi>\<^sub>1) \<pi>\<^sub>1 \<and> completedFrom (hd \<pi>\<^sub>1) \<pi>\<^sub>1 \<and>
-             istate (hd \<pi>\<^sub>2) \<and> validFromS (hd \<pi>\<^sub>2) \<pi>\<^sub>2 \<and> completedFrom (hd \<pi>\<^sub>2) \<pi>\<^sub>2 \<and>
-            (hd \<pi>\<^sub>1) \<approx>\<^sub>\<L> (hd \<pi>\<^sub>2) \<longrightarrow>
+    (\<forall>\<pi>\<^sub>1 \<pi>\<^sub>2. validTrace \<pi>\<^sub>1 \<and> validTrace \<pi>\<^sub>2 \<and> (hd \<pi>\<^sub>1) \<approx>\<^sub>\<L> (hd \<pi>\<^sub>2) \<longrightarrow>
       secureFor \<pi>\<^sub>1 \<pi>\<^sub>2
 )\<close>
   using secure_def by auto
@@ -207,6 +210,7 @@ proof (rule E)
   show "sl = []"
   using notHopeless[unfolded hopeless_def] apply auto
   apply (elim asBD.final_allE[OF final] completed_neverInterE neverInter_lops_emptyE)
+  apply simp
   unfolding S_eq_ops by simp
 qed
 

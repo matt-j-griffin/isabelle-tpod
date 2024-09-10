@@ -420,7 +420,7 @@ proof -
                 apply (erule impE)
                 subgoal by auto
                 using nh2' by simp
-              note iactionL = IH.IH[OF _ r(1) s2' _ _ _ _ _ _ _ _ vn1 tr2 S(1) Vtr1 _ _ O'[unfolded ctrr\<^sub>1[symmetric]], unfolded ctrr\<^sub>1 ctrr\<^sub>2, simplified]
+              note iactionL = IH.IH[OF _ r(1) s2' _ _ _ _ _ _ _ _ _ _ vn1 tr2 _ S(1) Vtr1 _ _ O'[unfolded ctrr\<^sub>1[symmetric]], unfolded ctrr\<^sub>1 ctrr\<^sub>2, simplified]
               have \<psi>: \<open>Opt.\<psi> (\<Delta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2' cvl\<^sub>2') trr\<^sub>1 trr\<^sub>2\<close>
                 unfolding Opt.\<psi>_def apply (intro impI allI)
                 subgoal for _ _ s1 s\<^sub>2 vl\<^sub>1 vl\<^sub>2 
@@ -440,7 +440,7 @@ proof -
               subgoal by auto
               apply simp
               using nh\<^sub>1' by blast
-            note iactionL = actionL[OF _ r(2) _ _ _ _ _ _ _ _ vn2 S(2) _ _ O'[unfolded ctrr\<^sub>2[symmetric]], unfolded ctrr\<^sub>1 ctrr\<^sub>2, simplified]
+            note iactionL = actionL[OF _ r(2) _ _ _ _ _ _ _ _ _ _ vn2 S(2) _ _ O'[unfolded ctrr\<^sub>2[symmetric]], unfolded ctrr\<^sub>1 ctrr\<^sub>2, simplified]
             have \<psi>: \<open>Opt.\<psi> (\<Delta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2 cvl\<^sub>2) trr\<^sub>1 trr\<^sub>2\<close>
               unfolding Opt.\<psi>_def apply (intro impI allI)
               subgoal for _ _ s1 s\<^sub>2 vl\<^sub>1 vl\<^sub>2 

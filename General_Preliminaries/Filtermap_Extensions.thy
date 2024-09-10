@@ -1,10 +1,12 @@
 theory Filtermap_Extensions
   imports 
-    Bounded_Deducibility_Security.Filtermap
+    More_LazyLists.List_Filtermap
     Trivia_Extensions
 begin
 
+hide_const filtermap
 
+(*
 
 (*  THE CONCRETE FILTERMAP_CHARACTERISING PREDICATES 
 (used in the relative security unwinding proof soundness)  *)
@@ -445,7 +447,7 @@ proof-
 qed
 
 end (* context if_filtermap_def *)
-
+*)
 
 lemma length_filtermap_eq: \<open>length (filtermap pred func1 xs) = length (filtermap pred func2 xs)\<close>
 proof (induct xs)

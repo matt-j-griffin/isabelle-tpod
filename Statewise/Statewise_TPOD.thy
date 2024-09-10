@@ -19,9 +19,9 @@ no_notation asCTPOD.low_equivs\<^sub>v\<^sub>a\<^sub>n (infixl \<open>\<approx>\
 no_notation asCTPOD.low_equivs\<^sub>o\<^sub>p\<^sub>t (infixl \<open>\<approx>\<^sub>\<L>\<^sub>s\<^sub>o\<^sub>p\<^sub>t\<close> 100)
 
 sublocale asTPOD: TPOD
-  where Tr\<^sub>v\<^sub>a\<^sub>n = \<open>{\<pi>. istate\<^sub>v\<^sub>a\<^sub>n (hd \<pi>) \<and> validFromS\<^sub>v\<^sub>a\<^sub>n (hd \<pi>) \<pi> \<and> completedFrom\<^sub>v\<^sub>a\<^sub>n (hd \<pi>) \<pi>}\<close>
+  where Tr\<^sub>v\<^sub>a\<^sub>n = \<open>{\<pi>. validTrace\<^sub>v\<^sub>a\<^sub>n \<pi>}\<close>
     and ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n = ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n and low_equiv\<^sub>v\<^sub>a\<^sub>n = low_equiv\<^sub>v\<^sub>a\<^sub>n and ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n = ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n
-    and Tr\<^sub>o\<^sub>p\<^sub>t = \<open>{\<pi>. istate\<^sub>o\<^sub>p\<^sub>t (hd \<pi>) \<and> validFromS\<^sub>o\<^sub>p\<^sub>t (hd \<pi>) \<pi> \<and> completedFrom\<^sub>o\<^sub>p\<^sub>t (hd \<pi>) \<pi>}\<close>
+    and Tr\<^sub>o\<^sub>p\<^sub>t = \<open>{\<pi>. validTrace\<^sub>o\<^sub>p\<^sub>t \<pi>}\<close>
     and ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t and low_equiv\<^sub>o\<^sub>p\<^sub>t = low_equiv\<^sub>o\<^sub>p\<^sub>t and ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t
   .
 
@@ -32,10 +32,10 @@ lemma CTPOD_is_TPOD[simp]: \<open>asCTPOD.secure \<longleftrightarrow> asTPOD.se
   unfolding asCTPOD.secure_def asTPOD.secure_def by auto
 
 lemma secure_alt_def: \<open>secure \<longleftrightarrow> (\<forall>ctr\<^sub>1 ctr\<^sub>2 tr\<^sub>1 tr\<^sub>2.
-  istate\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>1) \<and> validFromS\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>1) ctr\<^sub>1 \<and> completedFrom\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>1) ctr\<^sub>1 \<and>
-  istate\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>2) \<and> validFromS\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>2) ctr\<^sub>2 \<and> completedFrom\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>2) ctr\<^sub>2 \<and>
-  istate\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>1)  \<and> validFromS\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>1)  tr\<^sub>1  \<and> completedFrom\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>1)  tr\<^sub>1 \<and>
-  istate\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>2)  \<and> validFromS\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>2)  tr\<^sub>2  \<and> completedFrom\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>2)  tr\<^sub>2 \<and>
+  validTrace\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 \<and>
+  validTrace\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and>
+  validTrace\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and>
+  validTrace\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and>
   ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and>
   ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and>
   (hd tr\<^sub>1) \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>2) \<and> ctr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<longrightarrow>
@@ -46,6 +46,7 @@ lemma secure_def: \<open>secure \<longleftrightarrow> (\<forall>cs\<^sub>1 ctr\<
   istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 \<and> istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<and> 
     validFromS\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 ctr\<^sub>1 \<and> validFromS\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 ctr\<^sub>2 \<and> validFromS\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 tr\<^sub>1 \<and> validFromS\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 tr\<^sub>2 \<and> 
     completedFrom\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 ctr\<^sub>1 \<and> completedFrom\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 ctr\<^sub>2 \<and> completedFrom\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 tr\<^sub>1 \<and> completedFrom\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 tr\<^sub>2 \<and>
+    ctr\<^sub>1 \<noteq> [] \<and> ctr\<^sub>2 \<noteq> [] \<and> tr\<^sub>1 \<noteq> [] \<and> tr\<^sub>2 \<noteq> [] \<and>
     ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and>     
     ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 \<and> ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2 \<and> 
     ctr\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2 \<and> s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2

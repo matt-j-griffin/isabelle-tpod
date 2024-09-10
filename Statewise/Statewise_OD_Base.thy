@@ -56,12 +56,6 @@ lemma secure_alt_def: \<open>secure =
 )\<close>
   using secure_def by auto
 
-
-(* TODO - introduce later*)
-lemma list_all2_lemmas_lowEquivs: \<open>list_all2_lemmas (\<approx>\<^sub>\<L>\<^sub>s) (\<approx>\<^sub>\<L>)\<close>
-  apply (standard)
-  by blast
-
 text \<open>OD as instance of \<forall>\<forall> BD Security:\<close>
 
 definition isObs :: "'state \<Rightarrow> bool" where 
@@ -118,7 +112,7 @@ lemma length_ops: \<open>length (ops\<^sub>\<L> tr) = length (ops\<^sub>\<H> tr)
   unfolding ops\<^sub>\<L>_def ops\<^sub>\<H>_def by (rule length_filtermap_eq)
 
 lemma S_unzipL[simp]: \<open>unzipL (asBD.S tr) = ops\<^sub>\<L> tr\<close>
-  unfolding S_eq_ops by (intro length_ops zip_unzip(1))
+  unfolding S_eq_ops by (intro length_ops map_fst_zip)
 
 lemma O_Cons[simp]: "asBD.O (trn # tr) = getObs trn # asBD.O tr"
   by (auto simp add: isObs)
@@ -132,9 +126,6 @@ by(induct tr, auto)
 lemma O_eq_lengthD: \<open>asBD.O tr = asBD.O tr' \<Longrightarrow> length tr = length tr'\<close>
   using O_length by metis
 
-interpretation lowEquivs: list_all2_lemmas \<open>(\<approx>\<^sub>\<L>\<^sub>s)\<close> \<open>(\<approx>\<^sub>\<L>)\<close>
-  by (rule list_all2_lemmas_lowEquivs)
-
 lemma O_imp_lowEquivs:
   assumes O: \<open>asBD.O tr = asBD.O tr'\<close>
     shows \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close>
@@ -145,13 +136,13 @@ using assms proof -
   show \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close>
     using len_tr O apply (induct tr tr' rule: list_induct2)
     apply auto
-    by (intro lowEquivs.ConsI getObs_imp_lowEquiv)    
+    by (intro list.rel_intros(2) getObs_imp_lowEquiv)    
 qed
 
 lemma lowEquivs_imp_O:
   assumes \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close> \<open>ops\<^sub>\<L> tr = ops\<^sub>\<L> tr'\<close>
     shows \<open>asBD.O tr = asBD.O tr'\<close>
-using assms proof (induct rule: lowEquivs.inducts)
+using assms proof (induct rule: list_all2_induct)
   case (Cons x xs y ys)
   then show ?case 
     apply (elim low_equiv_interE)
@@ -345,7 +336,8 @@ next
   have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
     using leq low_equiv_interE by blast
     have vls: \<open>unzipL vl' = unzipL vl1'\<close> (*TODO *)
-      by (metis (no_types, lifting) consume(1) consume(2) consume_def eqInter list.collapse list.inject lops unzipL.simps(2))
+      using consume(1) consume(2) consume_def eqInter lops
+      by (metis map_tl)
     have nxt: \<open>hopeless s' vl' \<or> hopeless s1' vl1' \<or> \<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1'\<close>
       using validTrans consume not_final
       using assms(1) unfolding saction_def apply -
@@ -356,7 +348,8 @@ next
       using leq apply (elim lowEquiv_imp_getObs[rotated])
       using consume eqInter unfolding consume_def apply auto
       using lops unfolding getSec_def 
-      by (metis S_unzipL asBD.S_Cons_unfold consume(1) consume(2) consume_def list.collapse list.inject ops\<^sub>\<L>_Cons_unfold unzipL.simps(2)) (* TODO *)
+      using S_unzipL asBD.S_Cons_unfold consume(1) consume(2) consume_def ops\<^sub>\<L>_Cons_unfold
+      by (metis (no_types, lifting) hd_map list.inject list.simps(9))
     show "hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s = getObs s1 \<and> \<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1' 
             \<and> unzipL vl' = unzipL vl1'"
       using obs vls nxt by simp
@@ -385,13 +378,13 @@ using assms(1) proof (elim conjE,intro conjI)
 next
   assume iar: \<open>iactionRight s vl s1 vl1\<close>
   show \<open>asBD.iactionRight (\<lambda>s vl s1 vl1. \<Delta> s vl s1 vl1 \<and> s \<approx>\<^sub>\<L> s1 \<and> unzipL vl = unzipL vl1) s vl s1 vl1\<close>
-    using iar unzipL_length[OF lops] by (rule iactionRight_asBD)
+    using iar map_eq_imp_length_eq[OF lops] by (rule iactionRight_asBD)
 next
   assume ial: \<open>iactionLeft s vl s1 vl1\<close>
   have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
     using leq low_equiv_interE by blast
   show \<open>asBD.iactionLeft (\<lambda>s vl s1 vl1. \<Delta> s vl s1 vl1 \<and> s \<approx>\<^sub>\<L> s1 \<and> unzipL vl = unzipL vl1) s vl s1 vl1\<close>
-    using ial unzipL_length[OF lops] by (rule iactionLeft_asBD)
+    using ial map_eq_imp_length_eq[OF lops] by (rule iactionLeft_asBD)
 next
   assume \<open>saction \<Delta> s vl s1 vl1\<close>
     thus \<open>asBD.saction (\<lambda>s vl s1 vl1. \<Delta> s vl s1 vl1 \<and> s \<approx>\<^sub>\<L> s1 \<and> unzipL vl = unzipL vl1) s vl s1 vl1\<close>

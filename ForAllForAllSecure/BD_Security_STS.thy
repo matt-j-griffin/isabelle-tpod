@@ -4,8 +4,7 @@
 theory BD_Security_STS
   imports
     "Abstract_BD_Security_Extensions" 
-    "../General_Preliminaries/Transition_System_Extensions"
-    "HOL-ex.Sketch_and_Explore" (* TODO *)
+    "../General_Preliminaries/TPOD_Transition_System"
 begin
 
 (* TODO *)
@@ -900,7 +899,7 @@ lemma iactionLeft_impI:
       and imp: \<open>\<And>s\<^sub>1' vl\<^sub>1'. \<lbrakk>\<not>isObs s\<^sub>1; validTrans (s\<^sub>1, s\<^sub>1'); consume s\<^sub>1 vl\<^sub>1 vl\<^sub>1'; \<Lambda>1 s\<^sub>1' vl\<^sub>1' s\<^sub>2 vl\<^sub>2;
                    \<not>hopeless s\<^sub>1' vl\<^sub>1'\<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1' vl\<^sub>1' s\<^sub>2 vl\<^sub>2\<close>
     shows "iactionLeft \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-  unfolding iactionLeft_def sketch (intro allI impI; elim conjE)
+  unfolding iactionLeft_def 
 proof (intro allI impI ; elim conjE)
   fix s' vl'
   assume vt: "validTrans (s\<^sub>1, s')"
@@ -929,7 +928,7 @@ lemma iactionRight_impI:
       and imp: \<open>\<And>s\<^sub>2' vl\<^sub>2'. \<lbrakk>\<not>isObs s\<^sub>2; validTrans (s\<^sub>2, s\<^sub>2'); consume s\<^sub>2 vl\<^sub>2 vl\<^sub>2'; \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2' vl\<^sub>2';
                    \<not>hopeless s\<^sub>2' vl\<^sub>2'\<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2' vl\<^sub>2'\<close>
     shows "iactionRight \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-  unfolding iactionRight_def sketch (intro allI impI; elim conjE)
+  unfolding iactionRight_def 
 proof (intro allI impI ; elim conjE)
   fix s' vl'
   assume vt: "validTrans (s\<^sub>2, s')"
@@ -960,7 +959,7 @@ lemma saction_impI:
                   \<not> hopeless s\<^sub>1' vl\<^sub>1'; \<not> hopeless s\<^sub>2' vl\<^sub>2'
             \<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2'\<close>
     shows "saction \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-unfolding saction_def sketch (intro allI impI; elim conjE)
+unfolding saction_def 
 proof (intro allI impI ; elim conjE)
   fix s' vl' s1' vl1'
   assume validTrans: "validTrans (s\<^sub>1, s')" "validTrans (s\<^sub>2, s1')"

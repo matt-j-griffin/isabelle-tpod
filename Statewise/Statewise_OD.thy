@@ -85,12 +85,6 @@ lemma secure_alt_def: \<open>secure =
 )\<close>
   using secure_def by auto
 
-
-(* TODO - introduce later*)
-lemma list_all2_lemmas_lowEquivs: \<open>list_all2_lemmas (\<approx>\<^sub>\<L>\<^sub>s) (\<approx>\<^sub>\<L>)\<close>
-  apply (standard)
-  by blast
-
 text \<open>OD as instance of \<forall>\<forall> BD Security:\<close>
 
 definition isObs :: "'state \<Rightarrow> bool" where 
@@ -115,12 +109,6 @@ lemma lowEquiv_imp_getObs: "\<lbrakk>isInter s \<Longrightarrow>  op\<^sub>\<L> 
   apply (drule equivp_lowEquiv)
   unfolding getObs_def
   using lowEquiv_eq by blast
-
-
-
-(* TODO - introduce later*)
-interpretation lowEquivs: list_all2_lemmas \<open>(\<approx>\<^sub>\<L>\<^sub>s)\<close> \<open>(\<approx>\<^sub>\<L>)\<close>
-  by (rule list_all2_lemmas_lowEquivs)
 
 text \<open>OD as instance of \<forall>\<forall> BD Security:\<close>
 
@@ -161,7 +149,7 @@ using assms proof -
   show \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close>
     using len_tr O apply (induct tr tr' rule: list_induct2)
     apply auto
-    by (intro lowEquivs.ConsI getObs_imp_lowEquiv)    
+    by (intro list.rel_intros(2) getObs_imp_lowEquiv)    
 qed
 
 lemma ForAll_ForAll_Secure_imp_secure: "asBD.ForAll_ForAll_Secure \<Longrightarrow> secure"
@@ -172,7 +160,7 @@ lemma ForAll_ForAll_Secure_imp_secure: "asBD.ForAll_ForAll_Secure \<Longrightarr
 lemma lowEquivs_imp_O: 
   assumes \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close> \<open>ops\<^sub>\<L> tr = ops\<^sub>\<L> tr'\<close>
     shows \<open>asBD.O tr = asBD.O tr'\<close>
-using assms proof (induct rule: lowEquivs.inducts)
+using assms proof (induct rule: list_all2_induct)
   case (Cons x xs y ys)
   then show ?case 
     apply (elim low_equiv_interE)

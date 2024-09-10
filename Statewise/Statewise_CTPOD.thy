@@ -50,14 +50,6 @@ sublocale asCTPOD: CTPOD
     and U\<^sub>o\<^sub>p\<^sub>t = \<open>{\<pi>. U\<^sub>o\<^sub>p\<^sub>t \<pi>}\<close>
   .
 
-
-interpretation lowEquivs\<^sub>v\<^sub>a\<^sub>n: list_all2_lemmas \<open>(\<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n)\<close> \<open>(\<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n)\<close>
-  by (rule Van.list_all2_lemmas_lowEquivs)
-
-interpretation lowEquivs\<^sub>o\<^sub>p\<^sub>t: list_all2_lemmas \<open>(\<approx>\<^sub>\<L>\<^sub>s\<^sub>o\<^sub>p\<^sub>t)\<close> \<open>(\<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t)\<close>
-  by (rule Opt.list_all2_lemmas_lowEquivs)
-
-
 abbreviation \<open>secure \<equiv> asCTPOD.secure\<close>
 
 lemma secure_alt_def: \<open>secure \<longleftrightarrow> (\<forall>ctr\<^sub>1 ctr\<^sub>2 tr\<^sub>1 tr\<^sub>2.
@@ -202,12 +194,12 @@ lemmas S_ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t = Opt.S_unzipL
 lemmas S_ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n = Van.S_unzipL
 
 lemma S_ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t[simp]: \<open>unzipR (asCBD.S\<^sub>o\<^sub>p\<^sub>t tr) = ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t tr\<close>
-  unfolding S_ops\<^sub>o\<^sub>p\<^sub>t by (intro zip_unzip Opt.length_ops)
+  unfolding S_ops\<^sub>o\<^sub>p\<^sub>t by (intro map_snd_zip Opt.length_ops)
 
 lemmas S_ops\<^sub>v\<^sub>a\<^sub>n = Van.S_eq_ops
 
 lemma S_ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n[simp]: \<open>unzipR (asCBD.S\<^sub>v\<^sub>a\<^sub>n tr) = ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n tr\<close>
-  unfolding S_ops\<^sub>v\<^sub>a\<^sub>n by (intro zip_unzip Van.length_ops)
+  unfolding S_ops\<^sub>v\<^sub>a\<^sub>n by (intro map_snd_zip Van.length_ops)
 
 lemmas zip_injectI = arg_cong2[where f = zip]
 
@@ -340,7 +332,7 @@ lemma unwindForOD'_asBD:
   apply (erule asCBD.Van.consumeE)
   apply (erule asCBD.Van.consume_secE, blast)
   apply simp
-  apply (metis list.exhaust_sel list.sel(3) unzipL.simps(2))
+  apply (metis map_tl)
   apply (erule asCBD.Van.consume_notSecE, blast)
   by simp
 

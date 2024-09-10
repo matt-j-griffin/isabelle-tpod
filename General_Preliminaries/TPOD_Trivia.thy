@@ -35,7 +35,6 @@ lemma Collect_eq: \<open>{s. P s} = {s. Q s} \<longleftrightarrow> (\<forall>s. 
 lemma list_all_True[simp]: "list_all (\<lambda>_. True) tr"
   using list.pred_True by metis
 
-
 lemma measure_induct4[case_names IH]:
 fixes meas :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> nat"
 assumes "\<And>x1 x2 x3 x4. (\<And>y1 y2 y3 y4. meas y1 y2 y3 y4 < meas x1 x2 x3 x4 \<Longrightarrow> S y1 y2 y3 y4) \<Longrightarrow> S x1 x2 x3 x4"
@@ -53,6 +52,9 @@ lemma disj_notI1: "(\<not>P \<Longrightarrow> Q) \<Longrightarrow> P \<or> Q"
 
 lemma Not_Not_comp[simp]: "\<not> (Not \<circ> P) s \<equiv> P s"
   by auto
+
+lemma map_filtermap: \<open>map T1 (filtermap P T2 xs) =  filtermap P (T1 o T2) xs\<close>
+  by (simp add: List_Filtermap.filtermap_def)
 
 end
 

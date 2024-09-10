@@ -1,8 +1,6 @@
 theory Statewise_OD
   imports
-    "../ForAllForAllSecure/BD_Security_STS"
-    "../OD"
-    "HOL-ex.Sketch_and_Explore" (* TODO *)
+    Statewise_OD_Base
 begin
 
 locale Statewise_OD = System_Mod istate validTrans final
@@ -50,28 +48,30 @@ lemma equivp_lowEquivQ:
   by metis+
 *)
 
-definition T :: "'state \<Rightarrow> bool" where 
-"T trn \<equiv> False"
+sublocale base: Statewise_OD_Base
+  where istate = istate and validTrans = validTrans and final = final and isInter = isInter 
+    and op\<^sub>\<L> = op\<^sub>\<L> and op\<^sub>\<H> = \<open>\<lambda>_. (1::nat)\<close> and u = \<open>\<lambda>_. True\<close>
+    and low_equiv = low_equiv
+proof standard
+  fix x assume "final x" thus "\<not> isInter x" by (rule isInter_not_final)
+next
+  fix x y assume "isInter x \<Longrightarrow> op\<^sub>\<L> x = op\<^sub>\<L> y" 
+  thus "x \<approx>\<^sub>\<L> y = ((\<approx>\<^sub>\<L>) x = (\<approx>\<^sub>\<L>) y)" by (rule equivp_lowEquiv)
+next
+  fix P x y assume "x \<approx>\<^sub>\<L> y"  "isInter x = isInter y \<Longrightarrow> P"
+  thus P by (rule low_equiv_interE)
+qed (rule reflp_lowEquiv symp_lowEquiv)+
 
-lemma not_T[simp]: "\<not> T trn" unfolding T_def by auto
-                            
-lemma neverT[simp,intro!]: "never T tr" unfolding T_def list_all_def by simp
+abbreviation \<open>validTrace \<equiv> base.validTrace\<close>
+abbreviation \<open>ops\<^sub>\<L> \<equiv> base.ops\<^sub>\<L>\<close> lemmas ops\<^sub>\<L>_def = base.ops\<^sub>\<L>_def
+abbreviation \<open>interactable \<equiv> base.interactable\<close>
+abbreviation \<open>reachNT \<equiv> base.reachNT\<close>
 
+definition \<open>lops_only \<equiv> map (\<lambda>lop. (lop, 1))\<close>
 
-abbreviation \<open>completed \<equiv> list_all final\<close>
-abbreviation \<open>neverInter \<equiv> never isInter\<close>
+definition \<open>hopeless s lops \<equiv> base.hopeless s (lops_only lops)\<close>
+definition \<open>consume s lops lops' \<equiv> base.consume s (lops_only lops) (lops_only lops')\<close>
 
-lemma completed_neverInterE[elim]: \<open>completed tr \<Longrightarrow> (neverInter tr \<Longrightarrow> P) \<Longrightarrow> P\<close>
-  using isInter_not_final by (induct tr, auto)
-
-definition \<open>ops\<^sub>\<L> = filtermap isInter op\<^sub>\<L>\<close> 
-
-(* TODO filtermap lemma for interpretation? *)
-lemma ops\<^sub>\<L>_Cons_unfold: "ops\<^sub>\<L> (trn # tr) = (if isInter trn then op\<^sub>\<L> trn # ops\<^sub>\<L> tr else ops\<^sub>\<L> tr)"
-unfolding ops\<^sub>\<L>_def by auto
-
-abbreviation 
-  \<open>validTrace \<pi> \<equiv> istate (hd \<pi>) \<and> validFromS (hd \<pi>) \<pi> \<and> completedFrom (hd \<pi>) \<pi> \<and> \<pi> \<noteq> []\<close>
 
 sublocale OD
   where Tr = \<open>{\<pi>. validTrace \<pi>}\<close>
@@ -80,235 +80,137 @@ sublocale OD
   .
 
 lemma secure_alt_def: \<open>secure = 
-    (\<forall>\<pi>\<^sub>1 \<pi>\<^sub>2. validTrace \<pi>\<^sub>1 \<and> validTrace \<pi>\<^sub>2 \<and>
-            (hd \<pi>\<^sub>1) \<approx>\<^sub>\<L> (hd \<pi>\<^sub>2) \<longrightarrow>
+    (\<forall>\<pi>\<^sub>1 \<pi>\<^sub>2. validTrace \<pi>\<^sub>1 \<and> validTrace \<pi>\<^sub>2 \<and> (hd \<pi>\<^sub>1) \<approx>\<^sub>\<L> (hd \<pi>\<^sub>2) \<longrightarrow>
       secureFor \<pi>\<^sub>1 \<pi>\<^sub>2
 )\<close>
   using secure_def by auto
 
-text \<open>OD as instance of \<forall>\<forall> BD Security:\<close>
-
-definition isObs :: "'state \<Rightarrow> bool" where 
-"isObs s \<equiv> True"
-
-lemma isObs: "isObs s" unfolding isObs_def by auto
-
-definition getObs :: "'state \<Rightarrow> 'state set" where 
-"getObs s' \<equiv> {s . s \<approx>\<^sub>\<L> s'}"
-
-lemma getObs_imp_lowEquiv: "getObs s = getObs s' \<Longrightarrow> s \<approx>\<^sub>\<L> s'"
-  unfolding getObs_def Collect_eq 
-  apply (erule allE[where x = s])
-  by (meson reflpE reflp_lowEquiv)
-
-lemma lowEquiv_eq:
-  fixes s :: 'state assumes "(\<approx>\<^sub>\<L>) s = (\<approx>\<^sub>\<L>) s'" shows "{sa. sa \<approx>\<^sub>\<L> s} = {s. s \<approx>\<^sub>\<L> s'}"
-  using assms unfolding Collect_eq apply auto
-  by (metis sympE symp_lowEquiv)+
-
-lemma lowEquiv_imp_getObs: "\<lbrakk>isInter s \<Longrightarrow>  op\<^sub>\<L> s = op\<^sub>\<L> s'; s \<approx>\<^sub>\<L> s'\<rbrakk> \<Longrightarrow> getObs s = getObs s'"
-  apply (drule equivp_lowEquiv)
-  unfolding getObs_def
-  using lowEquiv_eq by blast
+no_notation base.low_equivs (infixl \<open>\<approx>\<^sub>\<L>\<^sub>s\<close> 100)
 
 text \<open>OD as instance of \<forall>\<forall> BD Security:\<close>
 
-definition B :: "'state \<Rightarrow> 'lowOp list \<Rightarrow> 'state \<Rightarrow> 'lowOp list \<Rightarrow> bool"
-where 
-"B s lops s' lops' \<equiv> s \<approx>\<^sub>\<L> s' \<and> lops = lops'"
-                            
-sublocale asBD: BD_Security_STS 
-    where istate = istate and validTrans = validTrans
-      and isSec = isInter and getSec = op\<^sub>\<L> 
-      and isObs = isObs and getObs = getObs
-      and T = T and B = B
-  ..
+lemma never_u[simp]: \<open>never (Not \<circ> (\<lambda>_. True)) \<pi>\<close>
+  by auto
 
-lemma S_eq_ops\<^sub>\<L>[simp]: \<open>asBD.S = ops\<^sub>\<L>\<close>
-  unfolding asBD.S_def ops\<^sub>\<L>_def by auto
-
-
-lemma O_Cons[simp]: "asBD.O (trn # tr) = getObs trn # asBD.O tr"
-  by (auto simp add: isObs)
-
-lemma O_length[simp]: "length (asBD.O tr) = length tr"
-by(induct tr, auto)
-
-lemma O_Nil_iff[simp]: "asBD.O tr = [] \<longleftrightarrow> tr = []"
-by(induct tr, auto)
-
-lemma O_eq_lengthD: \<open>asBD.O tr = asBD.O tr' \<Longrightarrow> length tr = length tr'\<close>
-  using O_length by metis
-
-lemma O_imp_lowEquivs:
-  assumes O: \<open>asBD.O tr = asBD.O tr'\<close>
-    shows \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close>
-using assms proof -
-  assume O: \<open>asBD.O tr = asBD.O tr'\<close>
-  have len_tr: \<open>length tr = length tr'\<close>
-    using O by (rule O_eq_lengthD)
-  show \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close>
-    using len_tr O apply (induct tr tr' rule: list_induct2)
-    apply auto
-    by (intro list.rel_intros(2) getObs_imp_lowEquiv)    
+lemma S_ops\<^sub>\<L>: 
+  assumes \<open>ops\<^sub>\<L> \<pi>\<^sub>1 = ops\<^sub>\<L> \<pi>\<^sub>2\<close>
+    shows \<open>unzipL (base.asBD.S \<pi>\<^sub>1) = unzipL (base.asBD.S \<pi>\<^sub>2)\<close>
+using assms unfolding base.asBD.S_def base.getSec_def ops\<^sub>\<L>_def 
+proof auto
+  assume a1: "List_Filtermap.filtermap isInter op\<^sub>\<L> \<pi>\<^sub>1 = List_Filtermap.filtermap isInter op\<^sub>\<L> \<pi>\<^sub>2"
+  have "base.getSec = (\<lambda>s. (op\<^sub>\<L> s, Suc 0))"
+    using One_nat_def base.getSec_def by presburger
+  then show "unzipL (List_Filtermap.filtermap isInter (\<lambda>s. (op\<^sub>\<L> s, Suc 0)) \<pi>\<^sub>1) = unzipL (List_Filtermap.filtermap isInter (\<lambda>s. (op\<^sub>\<L> s, Suc 0)) \<pi>\<^sub>2)"
+    using a1 base.S_unzipL base.asBD.S_def ops\<^sub>\<L>_def by moura
 qed
 
-lemma ForAll_ForAll_Secure_imp_secure: "asBD.ForAll_ForAll_Secure \<Longrightarrow> secure"
-  unfolding secure_alt_def asBD.ForAll_ForAll_Secure_def apply auto
-  unfolding B_def apply (rule O_imp_lowEquivs)
-  by auto
+lemma bounds:
+  assumes \<open>ops\<^sub>\<L> \<pi>\<^sub>1 = ops\<^sub>\<L> \<pi>\<^sub>2\<close> \<open>hd \<pi>\<^sub>1 \<approx>\<^sub>\<L> hd \<pi>\<^sub>2\<close>
+    shows \<open>base.B (hd \<pi>\<^sub>1) (base.asBD.S \<pi>\<^sub>1) (hd \<pi>\<^sub>2) (base.asBD.S \<pi>\<^sub>2)\<close>
+  using assms unfolding base.B_def by (intro conjI S_ops\<^sub>\<L>)
+
+lemma ForAll_ForAll_Secure_imp_secure: "base.asBD.ForAll_ForAll_Secure \<Longrightarrow> secure"
+  unfolding secure_alt_def sketch safe
+proof safe
+  fix \<pi>\<^sub>1 \<pi>\<^sub>2 
+  assume secure: base.asBD.ForAll_ForAll_Secure
+    and i: "istate (hd \<pi>\<^sub>1)" "istate (hd \<pi>\<^sub>2)"
+    and hd: "hd \<pi>\<^sub>1 \<approx>\<^sub>\<L> hd \<pi>\<^sub>2"
+    and vT: "validFromS (hd \<pi>\<^sub>1) \<pi>\<^sub>1" "completedFrom (hd \<pi>\<^sub>1) \<pi>\<^sub>1" "\<pi>\<^sub>1 \<noteq> []"
+            "validFromS (hd \<pi>\<^sub>2) \<pi>\<^sub>2" "completedFrom (hd \<pi>\<^sub>2) \<pi>\<^sub>2" "\<pi>\<^sub>2 \<noteq> []"
+    and ops: "ops\<^sub>\<L> \<pi>\<^sub>1 = ops\<^sub>\<L> \<pi>\<^sub>2"
+  have \<open>base.asBD.ForAll_ForAll_Secure_For \<pi>\<^sub>1 \<pi>\<^sub>2\<close>
+    using secure unfolding base.asBD.ForAll_ForAll_Secure_def by auto
+  hence \<open> base.asBD.O \<pi>\<^sub>1 = base.asBD.O \<pi>\<^sub>2\<close>
+    apply (elim impE conjE)
+    apply clarify
+    by (intro conjI never_u i hd vT bounds ops)
+  thus "\<pi>\<^sub>1 \<approx>\<^sub>\<L>\<^sub>s \<pi>\<^sub>2"
+    by (rule base.O_imp_lowEquivs)
+qed
   
-lemma lowEquivs_imp_O: 
-  assumes \<open>tr \<approx>\<^sub>\<L>\<^sub>s tr'\<close> \<open>ops\<^sub>\<L> tr = ops\<^sub>\<L> tr'\<close>
-    shows \<open>asBD.O tr = asBD.O tr'\<close>
-using assms proof (induct rule: list_all2_induct)
-  case (Cons x xs y ys)
-  then show ?case 
-    apply (elim low_equiv_interE)
-    apply simp
-    apply (intro conjI lowEquiv_imp_getObs)
-    using ops\<^sub>\<L>_Cons_unfold list.inject
-    apply force+
-    using Cons.hyps(1) apply force+
-    using ops\<^sub>\<L>_Cons_unfold by fastforce
-qed simp
-
-abbreviation \<open>consume \<equiv> asBD.consume\<close> lemmas consume_def = asBD.consume_def
-abbreviation \<open>hopeless \<equiv> asBD.hopeless\<close> lemmas hopeless_def = asBD.hopeless_def 
-
-lemma consume2_eqE:
-  assumes \<open>isInter s \<longleftrightarrow> isInter s1\<close> \<open>consume s vl vl'\<close> \<open>consume s1 vl vl1'\<close> 
-      and E: \<open>vl' = vl1' \<Longrightarrow> P\<close>
-    shows P
-  using assms unfolding consume_def by auto
+lemma getSec_op\<^sub>\<L>_eqI:
+  assumes \<open>base.getSec s = base.getSec s\<^sub>1\<close>
+    shows \<open>op\<^sub>\<L> s = op\<^sub>\<L> s\<^sub>1\<close>
+  using assms unfolding base.getSec_def by auto
 
 lemma isInter_consume2_eqE:
-  assumes \<open>isInter s \<longleftrightarrow> isInter s\<^sub>1\<close> \<open>isInter s\<close> \<open>consume s vl vl'\<close> \<open>consume s\<^sub>1 vl vl1'\<close> 
-      and E: \<open>\<lbrakk>op\<^sub>\<L> s = op\<^sub>\<L> s\<^sub>1; vl' = vl1'\<rbrakk> \<Longrightarrow> P\<close>
+  assumes major: \<open>isInter s \<longleftrightarrow> isInter s\<^sub>1\<close> \<open>isInter s\<close> \<open>base.consume s vl vl'\<close> \<open>base.consume s\<^sub>1 vl vl1'\<close> 
+      and minor: \<open>\<lbrakk>op\<^sub>\<L> s = op\<^sub>\<L> s\<^sub>1; vl' = vl1'\<rbrakk> \<Longrightarrow> P\<close>
     shows P
-  using assms unfolding consume_def by auto
+  by (rule base.asBD.isSec_consume2_eqE[OF major], intro minor getSec_op\<^sub>\<L>_eqI)
 
-abbreviation
-  interactable 
-where
-  \<open>interactable \<equiv> asBD.produces isInter\<close>
-lemmas interactable_def = asBD.produces_def
-
-lemma hopeless_empty_interactable: \<open>hopeless s [] \<longleftrightarrow> interactable s\<close>
-  unfolding hopeless_def interactable_def ops\<^sub>\<L>_def asBD.S_Nil_list_ex not_not
-  by auto
-
-lemma neverInter_lops_emptyE: \<open>neverInter tr \<Longrightarrow> (ops\<^sub>\<L> tr = [] \<Longrightarrow> P) \<Longrightarrow> P\<close>
-  unfolding ops\<^sub>\<L>_def
-  by (metis asBD.Nil_S_never asBD.S_def)
-
-lemma final_not_hopelessE: 
-  assumes final: \<open>final s\<close> and notHopeless: \<open>\<not>hopeless s sl\<close>
-      and E: \<open>sl = [] \<Longrightarrow> P\<close>
-    shows P
-  apply (rule E)
-  using notHopeless[unfolded hopeless_def] apply auto
-  by (elim asBD.final_allE[OF final] completed_neverInterE neverInter_lops_emptyE)
-
-thm asBD.final_allE completed_neverInterE neverInter_lops_emptyE
 (* Independent actions (left and right): *)
 definition iactionLeft where
 "iactionLeft s vl s1 \<equiv>
  \<forall>s'.
    validTrans (s, s') \<and> \<not> isInter s \<and> \<not> isInter s1 \<and> final s1 \<and> vl = [] \<longrightarrow> interactable s'"
 
-lemma final_consume_lastE:
-  assumes f: \<open>final s\<close>
-      and consume: \<open>consume s vl []\<close>
-      and P: \<open>vl = [] \<Longrightarrow> P\<close>
-    shows P
-  using consume apply (rule asBD.consume_lastE)
-  using isInter_not_final[OF f] apply auto
-  by (rule P)
-
-lemma iactionLeft_asBD:
-  assumes \<open>iactionLeft s vl s1\<close> and eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
-    shows \<open>asBD.iactionLeft \<Delta> s vl s1 vl\<close>
-  using assms(1) unfolding asBD.iactionLeft_def iactionLeft_def
-  apply (auto simp add: isObs)
-  apply (erule consume2_eqE[OF eqInter],assumption)
-  apply (frule isInter_not_final)
-  apply (erule final_consume_lastE)
-  using hopeless_empty_interactable eqInter
-  by blast+
+lemma iactionLeft_baseI: \<open>iactionLeft s (unzipL vl) s1 \<Longrightarrow> base.iactionLeft s vl s1 vl1\<close>
+  unfolding base.iactionLeft_def iactionLeft_def by auto
 
 definition iactionRight where
 "iactionRight s vl s1 \<equiv>
  \<forall>s1'.
    validTrans (s1, s1') \<and> \<not> isInter s \<and> \<not> isInter s1 \<and> final s \<and> vl = [] \<longrightarrow> interactable s1'"
 
-lemma iactionRight_asBD:
-  assumes \<open>iactionRight s vl s1\<close> and eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
-    shows \<open>asBD.iactionRight \<Delta> s vl s1 vl\<close>
-  using assms(1) unfolding asBD.iactionRight_def iactionRight_def
-  apply (auto simp add: isObs)
-  apply (erule consume2_eqE[OF eqInter[symmetric]],assumption)
-  apply (frule isInter_not_final)
-  apply (erule final_consume_lastE)
-  apply assumption
-  apply safe
-  using hopeless_empty_interactable eqInter by blast+
-
+lemma iactionRight_baseI: \<open>iactionRight s (unzipL vl) s1 \<Longrightarrow> base.iactionRight s vl s1 vl1\<close>
+  unfolding base.iactionRight_def iactionRight_def by auto
 
 (* Synchronous action: *)
 definition saction where
 "saction \<Delta> s vl s1 \<equiv>
  \<forall> s' vl' s1'.
    validTrans (s, s') \<and> consume s vl vl' \<and> validTrans (s1, s1') \<and> consume s1 vl vl' \<longrightarrow>  
-   asBD.hopeless s' vl' \<or> hopeless s1' vl' \<or> 
+   hopeless s' vl' \<or> hopeless s1' vl' \<or> 
    (\<Delta> s' vl' s1' \<and> s' \<approx>\<^sub>\<L> s1')"
 
+lemma lops_only_ops\<^sub>\<L>: \<open>base.asBD.S tr = lops_only (ops\<^sub>\<L> tr)\<close>
+  unfolding lops_only_def ops\<^sub>\<L>_def map_filtermap base.asBD.S_def  base.getSec_def comp_apply ..
 
-lemmas consume_empty = asBD.consume_empty
-(*
-lemma final_saction:
-  assumes final: \<open>final s\<close> \<open>final s1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
-      and nh: \<open>\<not> hopeless s vl\<close> and nh1: \<open>\<not> hopeless s1 vl\<close> 
-      and \<Delta>: \<open>\<Delta> s vl s1\<close>
-    shows \<open>asBD.saction (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl\<close>
-  using final leq unfolding asBD.saction_def apply (intro allI impI)
-  apply (elim conjE)
-  apply (drule final_terminal, assumption)
-  apply (drule final_terminal, assumption)
-  apply (intro disjI2)
-  apply (erule final_not_hopelessE[OF _ nh])
-  apply (intro conjI lowEquiv_imp_getObs)
-  using \<Delta> by simp_all
-*)
-lemma saction_asBD:
-  assumes \<open>saction \<Delta> s vl s1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
-      and nh: \<open>\<not> hopeless s vl\<close> and nh1: \<open>\<not> hopeless s1 vl\<close>
-    shows \<open>asBD.saction (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl\<close>
-using assms(2) unfolding asBD.saction_def 
-proof (intro allI impI, elim conjE)
+lemma lops_only_unzipL_S: \<open>lops_only (unzipL (base.asBD.S tr)) = base.asBD.S tr\<close>
+  unfolding base.S_unzipL by (rule lops_only_ops\<^sub>\<L>[symmetric])
+
+lemma base_consumeI: 
+  assumes \<open>base.consume s vl vl'\<close>
+    shows \<open>consume s (unzipL vl) (unzipL vl')\<close>
+  using assms unfolding consume_def
+  using base.S_unzipL base.asBD.S_def base.asBD.S_simps(1) base.asBD.S_single(2) base.asBD.filtermap_Nil_never_rhs base.consume_def base.getSec_def base.ops\<^sub>\<L>_Cons_unfold fst_conv list.collapse list.map_sel(1) list.sel(2) list.simps(9) lops_only_def map_tl ops\<^sub>\<L>_def
+  by (smt (verit) ) (* TODO *)
+
+lemma base_hopelessI: 
+  assumes \<open>\<not>base.hopeless s' vl'\<close>
+    shows \<open>\<not>hopeless s' (unzipL vl')\<close>
+  using assms unfolding hopeless_def base.hopeless_def by (metis lops_only_unzipL_S)
+
+lemma saction_baseI: 
+  assumes saction: \<open>saction \<Delta> s (unzipL vl) s1\<close> and vl_eq: \<open>unzipL vl = unzipL vl1\<close>
+      and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
+    shows \<open>base.saction (\<lambda>s vl s1 vl1. \<Delta> s (unzipL vl) s1) s vl s1 vl1\<close>
+unfolding base.saction_def 
+proof (intro allI impI disj_notI1 ; elim conjE)
   fix s' vl' s1' vl1'
-  assume leq: "s \<approx>\<^sub>\<L> s1"
-     and validTrans: "validTrans (s, s')" "validTrans (s1, s1')"
-     and consume: "consume s vl vl'" "consume s1 vl vl1'"
+  assume nh: "\<not> base.hopeless s' vl'" "\<not> base.hopeless s1' vl1'"
+    and vT: "validTrans (s, s')" "validTrans (s1, s1')"
+    and base_consume: "base.consume s vl vl'" "base.consume s1 vl1 vl1'"
   have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
     using leq low_equiv_interE by blast
-  have vls: \<open>vl' = vl1'\<close>
-    using consume by (elim consume2_eqE[OF eqInter])
-  hence consume': \<open>consume s1 vl vl'\<close>
-    using consume(2) by clarify
-  have nxt: \<open>hopeless s' vl' \<or> hopeless s1' vl' \<or> \<Delta> s' vl' s1' \<and> s' \<approx>\<^sub>\<L> s1'\<close>
-    using validTrans consume(1) consume' 
-    using assms(1) unfolding saction_def apply -
-    apply (erule allE[where x = s'], erule allE[where x = vl'], 
-           elim allE[where x = s1'] impE)
-    by auto
-  have obs: \<open>getObs s = getObs s1\<close>
-    using leq apply (elim lowEquiv_imp_getObs[rotated])
-    by (elim isInter_consume2_eqE[OF eqInter _ consume(1) consume'])
-  thus "hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s = getObs s1 \<and> \<Delta> s' vl' s1' \<and> s' \<approx>\<^sub>\<L> s1' \<and> 
-          vl' = vl1'"
-    using nxt vls by simp
-qed
+  have vl'_eq: \<open>unzipL vl' = unzipL vl1'\<close>
+    using base_consume eqInter vl_eq by (rule base.consume2_zip_eq)
+  have consume: \<open>consume s (unzipL vl) (unzipL vl')\<close>
+    using base_consume(1) by (rule base_consumeI)
+  have consume1: \<open>consume s1 (unzipL vl) (unzipL vl')\<close> 
+    unfolding vl_eq vl'_eq using base_consume(2) by (rule base_consumeI)
+  have hopeless: \<open>\<not>hopeless s' (unzipL vl')\<close>
+    using nh(1) by (rule base_hopelessI)
+  have hopeless1: \<open>\<not>hopeless s1' (unzipL vl')\<close>
+    using nh(2) unfolding vl'_eq by (rule base_hopelessI)
+  show "\<Delta> s' (unzipL vl') s1' \<and> s' \<approx>\<^sub>\<L> s1'"
+    using saction unfolding saction_def apply -
+    apply (erule allE[where x = s'], erule allE[where x = \<open>unzipL vl'\<close>])
+    apply (elim allE[where x = s1'] impE)
+    using consume consume1 vT hopeless hopeless1 by simp_all
+qed 
 
 (* *)
 
@@ -317,36 +219,11 @@ abbreviation \<open>unwindFor \<Delta> s vl s1 \<equiv>
    iactionRight s vl s1 \<and>
    saction \<Delta> s vl s1\<close>
 
-
-lemma unwindFor_asBD:
-  assumes \<open>unwindFor \<Delta> s vl s1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
-    and nh: \<open>\<not> hopeless s vl\<close> \<open>\<not> hopeless s1 vl\<close>
-  shows \<open>asBD.unwindFor (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl\<close>
-using assms(1) proof (elim conjE,intro conjI)
-  have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
-    using leq low_equiv_interE by blast
-  show \<open>asBD.finish s vl s1 vl\<close>
-    using lowEquiv_imp_getObs[OF _ leq] unfolding asBD.finish_def asBD.eqObs_def apply (auto simp add: isObs)
-    by (metis eqInter isInter_consume2_eqE)+
-next
-  assume iar: \<open>iactionRight s vl s1\<close>
-  have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
-    using leq low_equiv_interE by blast
-  show \<open>asBD.iactionRight (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl\<close>
-    using iar eqInter by (rule iactionRight_asBD)
-next
-  assume ial: \<open>iactionLeft s vl s1\<close>
-  have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
-    using leq low_equiv_interE by blast
-  show \<open>asBD.iactionLeft (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl\<close>
-    using ial eqInter by (rule iactionLeft_asBD)
-next
-  assume \<open>saction \<Delta> s vl s1\<close>
-    thus \<open>asBD.saction (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl\<close>
-    using leq nh by (rule saction_asBD)
-qed
-
-abbreviation \<open>reachNT \<equiv> asBD.reachNT\<close>
+lemma base_unwindForI: 
+  assumes "unwindFor \<Delta> s (unzipL vl) s1" and vl_eq: \<open>unzipL vl = unzipL vl1\<close>
+      and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
+    shows "base.unwindFor (\<lambda>s vl s1 vl1. \<Delta> s (unzipL vl) s1) s vl s1 vl1"  
+  using assms by (elim conjE; intro conjI iactionLeft_baseI iactionRight_baseI saction_baseI)
 
 definition unwind where
 "unwind \<Delta> \<equiv>
@@ -356,36 +233,34 @@ definition unwind where
    hopeless s vl \<or> hopeless s1 vl \<or>
    unwindFor \<Delta> s vl s1"
 
+lemma base_unwindI:
+  assumes unwind: \<open>unwind \<Delta>\<close>
+    shows \<open>base.unwind (\<lambda>s vl s1 vl1. \<Delta> s (unzipL vl) s1)\<close>
+unfolding base.unwind_def sketch (intro allI impI disj_notI1; elim conjE)
+proof (intro allI impI disj_notI1 ; elim conjE)
+  fix s vl s1 vl1 
+  assume "\<not> base.hopeless s vl" "\<not> base.hopeless s1 vl1"
+     "reachNT s"
+     "reachNT s1"
+     "\<Delta> s (unzipL vl) s1"
+     and leq: "s \<approx>\<^sub>\<L> s1"
+     and unzip: "unzipL vl = unzipL vl1"
+  hence \<open>unwindFor \<Delta> s (unzipL vl) s1\<close> 
+    using unwind unfolding unwind_def apply -
+    apply (erule allE[where x = s], erule allE[where x = \<open>unzipL vl\<close>], elim disjE impE allE[where x = s1])
+    subgoal by (intro conjI)
+    apply (drule base_hopelessI, simp)
+    by (drule base_hopelessI, drule base_hopelessI, simp)
+  thus "base.unwindFor (\<lambda>s vl s1 vl1. \<Delta> s (unzipL vl) s1) s vl s1 vl1"
+    using unzip leq by (rule base_unwindForI)
+qed
+
 lemma unwind_secure:
   assumes init: "(\<And>vl s s1. \<lbrakk>s \<approx>\<^sub>\<L> s1; istate s; istate s1\<rbrakk> \<Longrightarrow> \<Delta> s vl s1)"
       and unwind: "unwind \<Delta>"
   shows secure
-proof (rule ForAll_ForAll_Secure_imp_secure[OF asBD.unwind_secure[where \<Delta> = \<open>\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1\<close>], unfolded B_def])
-  fix vl :: \<open>'lowOp list\<close> and vl1 s s1 assume \<open>s \<approx>\<^sub>\<L> s1 \<and> vl = vl1\<close> \<open>istate s\<close> \<open>istate s1\<close>
-  thus \<open>\<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1  \<and> vl = vl1\<close>
-    apply (elim conjE)
-    apply (intro conjI)
-    by (rule init)
-next
-  show \<open>asBD.unwind (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1  \<and> vl = vl1)\<close>
-  unfolding asBD.unwind_def proof (intro allI impI ; elim conjE)
-    fix s vl s1 vl1
-    assume r1: \<open>reachNT s\<close> and r2: \<open>reachNT s1\<close>
-       and \<Delta>:  \<open>\<Delta> s vl s1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
-       and vl_def: \<open>vl = vl1\<close>
-    show \<open>hopeless s vl \<or> hopeless s1 vl1 \<or>
-          asBD.unwindFor (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1  \<and> vl = vl1) s vl s1 vl1\<close>
-      unfolding vl_def[symmetric] sketch (intro disj_notI1)
-    proof (intro disj_notI1)
-      assume hopeless: "\<not> hopeless s vl" "\<not> hopeless s1 vl"
-      have \<open>unwindFor \<Delta> s vl s1\<close>
-        using unwind[unfolded unwind_def] r1 r2 \<Delta> hopeless leq by auto
-      thus "asBD.unwindFor (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl"
-        using leq hopeless by (rule unwindFor_asBD)
-    qed
-  qed
-qed
-
+  by (intro ForAll_ForAll_Secure_imp_secure base_unwindI init unwind
+             base.unwind_ForAll_ForAll_Secure[where \<Delta> = \<open>\<lambda>s vl s1 vl1. \<Delta> s (unzipL vl) s1\<close>])
 
 end 
 

@@ -16,7 +16,7 @@ locale Statewise_OD_Base = System_Mod istate validTrans final
     and u :: "'state \<Rightarrow> bool"
 
   assumes isInter_not_final: \<open>\<And>x. final x \<Longrightarrow> \<not> isInter x\<close>
-      assumes equivp_lowEquiv: \<open>\<And>x y. \<lbrakk>isInter x \<Longrightarrow> op\<^sub>\<L> x = op\<^sub>\<L> y\<rbrakk> \<Longrightarrow> x \<approx>\<^sub>\<L> y = ((\<approx>\<^sub>\<L>) x = (\<approx>\<^sub>\<L>) y)\<close> (* Equivalence under assumptions *)
+      and equivp_lowEquiv: \<open>\<And>x y. \<lbrakk>isInter x \<Longrightarrow> op\<^sub>\<L> x = op\<^sub>\<L> y\<rbrakk> \<Longrightarrow> x \<approx>\<^sub>\<L> y = ((\<approx>\<^sub>\<L>) x = (\<approx>\<^sub>\<L>) y)\<close> (* Equivalence under assumptions *)
 
       and reflp_lowEquiv: \<open>reflp ((\<approx>\<^sub>\<L>)::'state \<Rightarrow> 'state \<Rightarrow> bool)\<close>
       and symp_lowEquiv: \<open>symp ((\<approx>\<^sub>\<L>)::'state \<Rightarrow> 'state \<Rightarrow> bool)\<close>
@@ -33,7 +33,10 @@ lemma completed_neverInterE[elim]: \<open>completed tr \<Longrightarrow> (neverI
 
 definition \<open>ops\<^sub>\<L> = filtermap isInter op\<^sub>\<L>\<close> 
 
-
+abbreviation 
+  low_equivs :: \<open>'state trace \<Rightarrow> 'state trace \<Rightarrow> bool\<close>  (infixl \<open>\<approx>\<^sub>\<L>\<^sub>s\<close> 100)
+where
+  \<open>low_equivs \<equiv> list_all2 low_equiv\<close> 
 
 (* TODO filtermap lemma for interpretation? *)
 lemma ops\<^sub>\<L>_Cons_unfold: "ops\<^sub>\<L> (trn # tr) = (if isInter trn then op\<^sub>\<L> trn # ops\<^sub>\<L> tr else ops\<^sub>\<L> tr)"
@@ -43,18 +46,6 @@ lemma ops\<^sub>\<L>_Cons_unfold: "ops\<^sub>\<L> (trn # tr) = (if isInter trn t
 abbreviation 
   \<open>validTrace \<pi> \<equiv> istate (hd \<pi>) \<and> validFromS (hd \<pi>) \<pi> \<and> completedFrom (hd \<pi>) \<pi> \<and> \<pi> \<noteq> []\<close>
 
-sublocale OD
-  where Tr = \<open>{\<pi>. validTrace \<pi>}\<close>
-    and ops\<^sub>\<L> = ops\<^sub>\<L>
-    (*and lowEquiv = lowEquiv*)
-  .
-
-
-lemma secure_alt_def: \<open>secure = 
-    (\<forall>\<pi>\<^sub>1 \<pi>\<^sub>2. validTrace \<pi>\<^sub>1 \<and> validTrace \<pi>\<^sub>2 \<and> (hd \<pi>\<^sub>1) \<approx>\<^sub>\<L> (hd \<pi>\<^sub>2) \<longrightarrow>
-      secureFor \<pi>\<^sub>1 \<pi>\<^sub>2
-)\<close>
-  using secure_def by auto
 
 text \<open>OD as instance of \<forall>\<forall> BD Security:\<close>
 
@@ -173,7 +164,7 @@ lemma ops_emptyI:
   \<open>ops\<^sub>\<H> tr = [] \<Longrightarrow> ops\<^sub>\<L> tr = []\<close>
   using length_ops[where tr = tr] by simp_all
 
-lemma neverInter_lops_emptyE: 
+lemma neverInter_ops_emptyE: 
   assumes major: \<open>neverInter tr\<close>
       and minor: \<open>\<lbrakk>ops\<^sub>\<L> tr = []; ops\<^sub>\<H> tr = []\<rbrakk> \<Longrightarrow> P\<close>
     shows P
@@ -200,7 +191,7 @@ lemma final_not_hopelessE:
 proof (rule E)
   show "sl = []"
   using notHopeless[unfolded hopeless_def] apply auto
-  apply (elim asBD.final_allE[OF final] completed_neverInterE neverInter_lops_emptyE)
+  apply (elim asBD.final_allE[OF final] completed_neverInterE neverInter_ops_emptyE)
   apply simp
   unfolding S_eq_ops by simp
 qed
@@ -287,6 +278,14 @@ definition saction where
    asBD.hopeless s' vl' \<or> hopeless s1' vl1' \<or> 
    (\<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1')"
 
+lemma consume2_zip_eq:
+  assumes \<open>consume s vl vl'\<close> \<open>consume s1 vl1 vl1'\<close>
+      and \<open>isInter s = isInter s1\<close>
+      and \<open>unzipL vl = unzipL vl1\<close>
+    shows \<open>unzipL vl' = unzipL vl1'\<close>
+  using assms consume_def 
+  using map_tl by metis
+
 lemma saction_asBD:
   assumes saction: \<open>saction \<Delta> s vl s1 vl1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
       and nh: \<open>\<not> hopeless s vl\<close> \<open>\<not> hopeless s1 vl1\<close> 
@@ -298,9 +297,8 @@ unfolding asBD.saction_def proof (intro allI impI, elim conjE)
     and consume: "consume s vl vl'"  "consume s1 vl1 vl1'"
   have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
     using leq low_equiv_interE by blast
-  have vls: \<open>unzipL vl' = unzipL vl1'\<close> (*TODO *)
-    using consume(1) consume(2) consume_def eqInter lops
-    by (metis map_tl)
+  have vls: \<open>unzipL vl' = unzipL vl1'\<close>
+    using consume eqInter lops by (rule consume2_zip_eq)
   have nxt: \<open>hopeless s' vl' \<or> hopeless s1' vl1' \<or> \<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1'\<close>
     using validTrans consume
     using assms(1) unfolding saction_def apply -

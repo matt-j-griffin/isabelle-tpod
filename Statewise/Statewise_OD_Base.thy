@@ -5,7 +5,7 @@ theory Statewise_OD_Base
 begin
 
 
-locale Statewise_OD_Base = System_Model istate validTrans final
+locale Statewise_OD_Base = System_Mod istate validTrans final
   for istate :: \<open>'state \<Rightarrow> bool\<close> and validTrans :: \<open>'state \<times> 'state \<Rightarrow> bool\<close>
   and final :: \<open>'state \<Rightarrow> bool\<close>
 + 
@@ -282,78 +282,40 @@ qed (use isObs in blast)
 definition saction where
 "saction \<Delta> s vl s1 vl1 \<equiv>
  \<forall> s' vl' s1' vl1'.
-   validTrans (s, s') \<and> consume s vl vl' \<and> validTrans (s1, s1') \<and> consume s1 vl1 vl1' \<and>
-   \<not>(final s \<and> final s1)
+   validTrans (s, s') \<and> consume s vl vl' \<and> validTrans (s1, s1') \<and> consume s1 vl1 vl1'
    \<longrightarrow>  
    asBD.hopeless s' vl' \<or> hopeless s1' vl1' \<or> 
    (\<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1')"
 
-lemma final_saction:
-  assumes final: \<open>final s\<close> \<open>final s1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
-      and nh: \<open>\<not> hopeless s vl\<close> and nh1: \<open>\<not> hopeless s1 vl1\<close> 
-      and \<Delta>: \<open>\<Delta> s vl s1 vl1\<close> and lops: \<open>unzipL vl = unzipL vl1\<close>
-    shows \<open>asBD.saction (\<lambda>s vl s1 vl1. \<Delta> s vl s1 vl1 \<and> s \<approx>\<^sub>\<L> s1 \<and> unzipL vl = unzipL vl1) s vl s1 vl1\<close>
-unfolding asBD.saction_def proof (intro allI impI , elim conjE)
-  fix s' s1' :: 'state and vl' vl1' :: "('lowOp \<times> 'highOp) list"
-  assume trans: "validTrans (s, s')" "validTrans (s1, s1')"
-    and consume: "consume s vl vl'"  "consume s1 vl1 vl1'"
-  note s_eq_s' = final_terminal[OF trans(1) final(1)]
-  note s1_eq_s1' = final_terminal[OF trans(2) final(2)]
-  note not_isInter = isInter_not_final[OF final(1)] isInter_not_final[OF final(2)]
-  note consumeE = asBD.consume_notSecE[OF consume(1) not_isInter(1)] asBD.consume_notSecE[OF consume(2) not_isInter(2)]
-  show "hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s = getObs s1 \<and> \<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1' \<and> unzipL vl' = unzipL vl1'"
-    apply (intro disjI2)
-    unfolding s_eq_s' s1_eq_s1'
-    apply (rule consumeE(1), rule consumeE(2))
-    using leq not_isInter lops
-    apply (intro conjI lowEquiv_imp_getObs)
-    apply simp_all
-    using \<Delta> by simp_all
-qed
-
 lemma saction_asBD:
   assumes saction: \<open>saction \<Delta> s vl s1 vl1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
       and nh: \<open>\<not> hopeless s vl\<close> \<open>\<not> hopeless s1 vl1\<close> 
-      and \<Delta>: \<open>\<lbrakk>final s; final s1; vl = []; vl1 = []\<rbrakk> \<Longrightarrow> \<Delta> s vl s1 vl1\<close>
       and lops: \<open>unzipL vl = unzipL vl1\<close>
     shows \<open>asBD.saction (\<lambda>s vl s1 vl1. \<Delta> s vl s1 vl1 \<and> s \<approx>\<^sub>\<L> s1 \<and> unzipL vl = unzipL vl1) s vl s1 vl1\<close>
-proof (cases \<open>final s \<and> final s1\<close>)
-  case True
-  thus ?thesis
-    using nh leq lops apply (elim conjE)
-    apply (intro \<Delta> final_saction)
-             apply assumption+
-    by (erule final_not_hopelessE, blast+)+
-next
-  case False
-  then show ?thesis 
-  unfolding asBD.saction_def
-  proof (intro allI impI, elim conjE)
+unfolding asBD.saction_def proof (intro allI impI, elim conjE)
   fix s' s1' :: 'state and vl' vl1' :: "('lowOp \<times> 'highOp) list"
-  assume not_final: "\<not> (final s \<and> final s1)"
-    and validTrans: "validTrans (s, s')" "validTrans (s1, s1')"
+  assume validTrans: "validTrans (s, s')" "validTrans (s1, s1')"
     and consume: "consume s vl vl'"  "consume s1 vl1 vl1'"
   have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
     using leq low_equiv_interE by blast
-    have vls: \<open>unzipL vl' = unzipL vl1'\<close> (*TODO *)
-      using consume(1) consume(2) consume_def eqInter lops
-      by (metis map_tl)
-    have nxt: \<open>hopeless s' vl' \<or> hopeless s1' vl1' \<or> \<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1'\<close>
-      using validTrans consume not_final
-      using assms(1) unfolding saction_def apply -
-      apply (erule allE[where x = s'], erule allE[where x = vl'], 
-             elim allE[where x = s1'] impE)
-      by auto
-    have obs: \<open>getObs s = getObs s1\<close>
-      using leq apply (elim lowEquiv_imp_getObs[rotated])
-      using consume eqInter unfolding consume_def apply auto
-      using lops unfolding getSec_def 
-      using S_unzipL asBD.S_Cons_unfold consume(1) consume(2) consume_def ops\<^sub>\<L>_Cons_unfold
-      by (metis (no_types, lifting) hd_map list.inject list.simps(9))
-    show "hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s = getObs s1 \<and> \<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1' 
-            \<and> unzipL vl' = unzipL vl1'"
-      using obs vls nxt by simp
-  qed
+  have vls: \<open>unzipL vl' = unzipL vl1'\<close> (*TODO *)
+    using consume(1) consume(2) consume_def eqInter lops
+    by (metis map_tl)
+  have nxt: \<open>hopeless s' vl' \<or> hopeless s1' vl1' \<or> \<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1'\<close>
+    using validTrans consume
+    using assms(1) unfolding saction_def apply -
+    apply (erule allE[where x = s'], erule allE[where x = vl'], 
+           elim allE[where x = s1'] impE)
+    by auto
+  have obs: \<open>getObs s = getObs s1\<close>
+    using leq apply (elim lowEquiv_imp_getObs[rotated])
+    using consume eqInter unfolding consume_def apply auto
+    using lops unfolding getSec_def 
+    using S_unzipL asBD.S_Cons_unfold consume(1) consume(2) consume_def ops\<^sub>\<L>_Cons_unfold
+    by (metis (no_types, lifting) hd_map list.inject list.simps(9))
+  show "hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s = getObs s1 \<and> \<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1' 
+          \<and> unzipL vl' = unzipL vl1'"
+    using obs vls nxt by simp
 qed
 
 (* *)
@@ -366,7 +328,6 @@ abbreviation \<open>unwindFor \<Delta> s vl s1 vl1 \<equiv>
 lemma unwindFor_asBD:
   assumes \<open>unwindFor \<Delta> s vl s1 vl1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
     and nh: \<open>\<not> hopeless s vl\<close> \<open>\<not> hopeless s1 vl1\<close> 
-    and \<Delta>: \<open>\<lbrakk>final s; final s1; vl = []; vl1 = []\<rbrakk> \<Longrightarrow> \<Delta> s vl s1 vl1\<close>
     and lops: \<open>unzipL vl = unzipL vl1\<close>
   shows \<open>asBD.unwindFor (\<lambda>s vl s1 vl1. \<Delta> s vl s1 vl1 \<and> s \<approx>\<^sub>\<L> s1 \<and> unzipL vl = unzipL vl1) s vl s1 vl1\<close>
 using assms(1) proof (elim conjE,intro conjI)
@@ -388,7 +349,7 @@ next
 next
   assume \<open>saction \<Delta> s vl s1 vl1\<close>
     thus \<open>asBD.saction (\<lambda>s vl s1 vl1. \<Delta> s vl s1 vl1 \<and> s \<approx>\<^sub>\<L> s1 \<and> unzipL vl = unzipL vl1) s vl s1 vl1\<close>
-    using leq nh \<Delta> lops by (rule saction_asBD)
+    using leq nh lops by (rule saction_asBD)
 qed
 
 abbreviation \<open>reachNT \<equiv> asBD.reachNT\<close>

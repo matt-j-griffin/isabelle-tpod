@@ -3,13 +3,6 @@ theory TPOD_Transition_System
           Relative_Security.Transition_System
 begin
 
-locale System_Model = 
-  Simple_Transition_System istate validTrans   
-    for istate :: "'state \<Rightarrow> bool" and validTrans :: "'state \<times> 'state  \<Rightarrow> bool"
-+
-  fixes final :: "'state \<Rightarrow> bool"
-  assumes final_terminal: \<open>\<And>s1 s2. \<lbrakk>validTrans (s1,s2); final s1\<rbrakk> \<Longrightarrow> s2 = s1\<close>
-
 context Simple_Transition_System
 begin
 
@@ -25,10 +18,6 @@ lemma validFromSE:
   apply (erule ConsE)
   by simp_all
 
-end (* context Simple_Transition_System *)
-
-context System_Model
-begin 
 
 lemma validFromS_length_le_1: 
   assumes \<open>validFromS s sl\<close>
@@ -43,29 +32,25 @@ using assms unfolding le_Suc_eq le_zero_eq length_0_conv apply (intro iffI)
     by simp_all
   .
 
+end (* context Simple_Transition_System *)
+
+context System_Mod
+begin 
+
 lemma validFromS_alwaysE: (* might not be needed *)
   assumes \<open>final s\<close> and \<open>validFromS s tr\<close> and \<open>Q s\<close> and \<open>list_all Q tr \<Longrightarrow> P\<close>
       and \<open>tr \<noteq> []\<close>
     shows P
+  using assms unfolding validFromS_def apply auto
 using assms unfolding validFromS_def 
 proof auto
   assume "tr \<noteq> []"  "final (hd tr)" "Q (hd tr)" "list_all Q tr \<Longrightarrow> P" "validS tr" "s = hd tr"
     thus ?thesis
       apply (induct tr rule: list_nonempty_induct, auto)
-      by (metis validFromS_Cons_iff validFromS_def final_terminal list.distinct(1))
+      by (metis Simple_Transition_System.validFromS_Cons_iff Simple_Transition_System.validFromS_def final_def)
   qed
 
-definition completedFrom :: "'state \<Rightarrow> 'state list \<Rightarrow> bool" where 
-"completedFrom s sl \<equiv> (sl = [] \<and> final s) \<or> (sl \<noteq> [] \<and> final (last sl))"
-
-lemma completed_Nil[simp,intro]: "completedFrom s [] \<longleftrightarrow> final s"
-unfolding completedFrom_def by auto
-
-lemma completed_Cons[simp]: "completedFrom s' (s # sl) \<longleftrightarrow> (sl = [] \<and> final s) \<or> (sl \<noteq> [] \<and> completedFrom s sl)"
-unfolding completedFrom_def by auto
-
-
-end (* context System_Model *)
+end
 
 end
 

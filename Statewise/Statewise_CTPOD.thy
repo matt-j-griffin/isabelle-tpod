@@ -276,16 +276,15 @@ proof (intro impI Opt.lowEquiv_imp_getObs, elim conjE)
 qed
 
 abbreviation \<open>unwindForOD \<equiv> Opt.unwindFor\<close> 
-thm Opt.unwindFor_asBD asCBD.Opt.unwindFor_impI
+
 lemma unwindForOD_asCBD:
   assumes unwind: \<open>unwindForOD (\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2) s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
       and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> 
                   \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close>
-                  \<open>\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
                   \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close>
-    shows \<open>asCBD.Opt.unwindFor (\<Lambda> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2) s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
-  using unwind others(1-5) apply (rule asCBD.Opt.unwindFor_impI [OF Opt.unwindFor_asBD] ; elim conjE, simp_all add: Opt.isObs_def)
-  using others(6-) by simp
+                shows \<open>asCBD.Opt.unwindFor (\<Lambda> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2) s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+  using unwind others(1-4) apply (rule asCBD.Opt.unwindFor_impI [OF Opt.unwindFor_asBD]; elim conjE, simp_all add: Opt.isObs_def)
+  using others(5-) by simp
 
 definition \<open>finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<equiv>
   final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> cvl\<^sub>1 = [] \<and> cvl\<^sub>2 = [] \<and> cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<longrightarrow>
@@ -294,9 +293,9 @@ definition \<open>finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 
 lemma finish_asCBD:
   assumes finish: \<open>finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> 
       and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close> 
-                  \<open>\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close> 
+                  \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close> 
     shows \<open>asCBD.finish (\<Lambda> \<Theta>) cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
-unfolding asCBD.finish_def sketch (intro impI; elim conjE)
+unfolding asCBD.finish_def 
 proof (intro impI ; elim conjE)
   assume final: "final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1" "final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2"
     and consume: "asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 cvl\<^sub>1 []" "asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 []"
@@ -323,10 +322,8 @@ lemma unwindForOD'_asBD:
       and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close>
                   "asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 cvl\<^sub>1 cvl\<^sub>1'""asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 cvl\<^sub>2'"
                   \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close> \<open>cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<close>
-      and \<Theta>: \<open>\<lbrakk>final\<^sub>o\<^sub>p\<^sub>t s\<^sub>1; final\<^sub>o\<^sub>p\<^sub>t s\<^sub>2; vl\<^sub>1 = []; vl\<^sub>2 = []\<rbrakk> \<Longrightarrow> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2' s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
     shows \<open>asCBD.Opt.unwindFor (\<Lambda> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
-  using unwind others(1-3) apply (rule asCBD.Opt.unwindFor_impI [OF Opt.unwindFor_asBD])
-  subgoal by (rule \<Theta>)
+  using unwind others(1-3,6) apply (rule asCBD.Opt.unwindFor_impI [OF Opt.unwindFor_asBD])
   using others  apply (simp_all add: Opt.isObs)
   apply (erule Van.low_equiv_interE)
   apply (erule asCBD.Van.consumeE)
@@ -336,19 +333,19 @@ lemma unwindForOD'_asBD:
   apply (erule asCBD.Van.consume_notSecE, blast)
   by simp
 
-
+(*(final\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 \<and> final\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<longrightarrow> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2' s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2) \<and> *)
 definition \<open>saction \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<equiv> \<forall>cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2'.
   validTrans\<^sub>v\<^sub>a\<^sub>n (cs\<^sub>1, cs\<^sub>1') \<and> asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 cvl\<^sub>1 cvl\<^sub>1' \<and> validTrans\<^sub>v\<^sub>a\<^sub>n (cs\<^sub>2, cs\<^sub>2') \<and>
-    asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 cvl\<^sub>2' \<and> cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> \<not>(final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2)
+    asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 cvl\<^sub>2' \<and> cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2
 \<longrightarrow>
   asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1' cvl\<^sub>1' \<or> asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2' cvl\<^sub>2' \<or> 
-    ((final\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 \<and> final\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<longrightarrow> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2' s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2) \<and> unwindForOD (\<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2)\<close>
+    (unwindForOD (\<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2)\<close>
 
 lemma saction_asCBD:
   assumes saction: \<open>saction \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> 
       and finish: \<open>finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> 
       and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close>
-            \<open>\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close>
+            \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close>
     shows \<open>asCBD.saction (\<Lambda> \<Theta>) cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
 unfolding asCBD.saction_def sketch (intro allI impI; elim conjE; intro disj_notI1)
 proof (intro allI impI ; elim conjE ; intro disj_notI1)
@@ -358,35 +355,10 @@ proof (intro allI impI ; elim conjE ; intro disj_notI1)
     and obs_eq: "getObs\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 = getObs\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2"
     and nh: "\<not> asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1' cvl\<^sub>1'" "\<not> asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2' cvl\<^sub>2'"
   note \<L>van = Van.getObs_imp_lowEquiv[OF obs_eq]
-  show "asCBD.Opt.unwindFor (\<Lambda> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-  proof (cases \<open>final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<close>)
-    case True
-    have cs_eq: \<open>cs\<^sub>1' = cs\<^sub>1\<close> \<open>cs\<^sub>2' = cs\<^sub>2\<close>
-      by (simp_all add: True Van.final_terminal vT)
-    have cvl_eq:  \<open>cvl\<^sub>1' = cvl\<^sub>1\<close> \<open>cvl\<^sub>2' = cvl\<^sub>2\<close>
-      using True Van.isInter_not_final consume asCBD.Van.consume_notSecE by blast+
-    have cvl_empty: \<open>cvl\<^sub>1 = []\<close> \<open>cvl\<^sub>2 = []\<close>
-      using True Van.final_not_hopelessE nh cs_eq cvl_eq by blast+
-    have \<open>unwindForOD (\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2) s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
-      using finish True \<L>van unfolding finish_def cvl_empty by simp
-    then show ?thesis
-      unfolding cs_eq cvl_eq using others by (rule unwindForOD_asCBD)
-  next
-    case False
-    hence unwind': \<open>(final\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 \<and> final\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<longrightarrow> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2' s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2) \<and> 
-                   unwindForOD (\<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
-      using saction vT consume nh \<L>van unfolding saction_def apply - 
-      apply (erule allE[where x = cs\<^sub>1'], erule allE[where x = cvl\<^sub>1'],
-             erule allE[where x = cs\<^sub>2'], erule allE[where x = cvl\<^sub>2'])
-      apply (elim impE conjE)
-      subgoal by (intro conjI)
-      by simp_all
-    have final: \<open>\<lbrakk>final\<^sub>o\<^sub>p\<^sub>t s\<^sub>1; final\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<rbrakk> \<Longrightarrow> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2' s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> using unwind' by simp
-    have unwind: \<open>unwindForOD (\<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> using unwind' by simp
-    thus ?thesis
-      using others(1-3) consume others(5-) \<L>van  apply (rule unwindForOD'_asBD)
-      by (rule final)
-  qed
+  have unwind: \<open>unwindForOD (\<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    using \<L>van consume nh saction saction_def vT by blast
+  thus "asCBD.Opt.unwindFor (\<Lambda> \<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+    using others(1-3) consume others(4-) \<L>van by (rule unwindForOD'_asBD)
 qed
 
 definition unwind where
@@ -447,13 +419,13 @@ unfolding asCBD.unwind_def proof (intro allI impI, elim conjE)
       assume finish: "finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
         and nh: "\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1" "\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2"
       show "asCBD.finish (\<Lambda> \<Theta>) cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-        using finish \<L> nh \<Theta> lops_eq clops_eq by (rule finish_asCBD)
+        using finish \<L> nh lops_eq clops_eq by (rule finish_asCBD)
     next
       assume saction: "saction \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
         and finish: "finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
         and nh: "\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1" "\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2"
         show "asCBD.saction (\<Lambda> \<Theta>) cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-        using saction finish \<L> nh \<Theta> lops_eq clops_eq by (rule saction_asCBD)
+        using saction finish \<L> nh lops_eq clops_eq by (rule saction_asCBD)
     qed
     .
 qed

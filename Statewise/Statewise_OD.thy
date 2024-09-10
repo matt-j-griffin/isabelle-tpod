@@ -2,9 +2,10 @@ theory Statewise_OD
   imports
     "../ForAllForAllSecure/BD_Security_STS"
     "../OD"
+    "HOL-ex.Sketch_and_Explore" (* TODO *)
 begin
 
-locale Statewise_OD = System_Model istate validTrans final
+locale Statewise_OD = System_Mod istate validTrans final
   for istate :: \<open>'state \<Rightarrow> bool\<close> and validTrans :: \<open>'state \<times> 'state \<Rightarrow> bool\<close>
   and final :: \<open>'state \<Rightarrow> bool\<close>
 + 
@@ -258,16 +259,13 @@ lemma iactionRight_asBD:
 definition saction where
 "saction \<Delta> s vl s1 \<equiv>
  \<forall> s' vl' s1'.
-   validTrans (s, s') \<and> consume s vl vl' \<and> validTrans (s1, s1') \<and> consume s1 vl vl' \<and>
-   \<not>(final s \<and> final s1)
-   \<longrightarrow>  
+   validTrans (s, s') \<and> consume s vl vl' \<and> validTrans (s1, s1') \<and> consume s1 vl vl' \<longrightarrow>  
    asBD.hopeless s' vl' \<or> hopeless s1' vl' \<or> 
    (\<Delta> s' vl' s1' \<and> s' \<approx>\<^sub>\<L> s1')"
 
 
-lemma consume_empty[simp]: "consume s [] vl \<longleftrightarrow> vl = [] \<and> \<not>isInter s"
-  unfolding consume_def by auto
-
+lemmas consume_empty = asBD.consume_empty
+(*
 lemma final_saction:
   assumes final: \<open>final s\<close> \<open>final s1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
       and nh: \<open>\<not> hopeless s vl\<close> and nh1: \<open>\<not> hopeless s1 vl\<close> 
@@ -281,50 +279,36 @@ lemma final_saction:
   apply (erule final_not_hopelessE[OF _ nh])
   apply (intro conjI lowEquiv_imp_getObs)
   using \<Delta> by simp_all
-
+*)
 lemma saction_asBD:
   assumes \<open>saction \<Delta> s vl s1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
-      and nh: \<open>\<not> hopeless s vl\<close> and nh1: \<open>\<not> hopeless s1 vl\<close> and \<Delta>: \<open>\<Delta> s vl s1\<close>
+      and nh: \<open>\<not> hopeless s vl\<close> and nh1: \<open>\<not> hopeless s1 vl\<close>
     shows \<open>asBD.saction (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl\<close>
-  using assms(2) unfolding asBD.saction_def apply (intro allI impI)
-  apply (elim conjE)
-  apply (cases \<open>final s \<and> final s1\<close>)
-  subgoal
-    apply (elim conjE)
-    apply (drule final_terminal, assumption)
-    apply (drule final_terminal, assumption)
-    apply (intro disjI2)
-    apply (erule final_not_hopelessE[OF _ nh])
-    apply (intro conjI lowEquiv_imp_getObs)
-    using \<Delta> by simp_all
-  subgoal for s' vl' s1' vl1'
-  proof -
-    assume leq: "s \<approx>\<^sub>\<L> s1"
-      and validTrans: "validTrans (s, s')" "validTrans (s1, s1')"
-      and consume: "consume s vl vl'" "consume s1 vl vl1'"
-      and "isObs s"
-      and "isObs s1"
-      and not_final: "\<not> (final s \<and> final s1)"
-    have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
-      using leq low_equiv_interE by blast
-    have vls: \<open>vl' = vl1'\<close>
-      using consume by (elim consume2_eqE[OF eqInter])
-    hence consume': \<open>consume s1 vl vl'\<close>
-      using consume(2) by clarify
-    have nxt: \<open>hopeless s' vl' \<or> hopeless s1' vl' \<or> \<Delta> s' vl' s1' \<and> s' \<approx>\<^sub>\<L> s1'\<close>
-      using validTrans consume(1) consume' not_final
-      using assms(1) unfolding saction_def apply -
-      apply (erule allE[where x = s'], erule allE[where x = vl'], 
-             elim allE[where x = s1'] impE)
-      by auto
-    have obs: \<open>getObs s = getObs s1\<close>
-      using leq apply (elim lowEquiv_imp_getObs[rotated])
-      by (elim isInter_consume2_eqE[OF eqInter _ consume(1) consume'])
-    thus "hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s = getObs s1 \<and> \<Delta> s' vl' s1' \<and> s' \<approx>\<^sub>\<L> s1' \<and> 
+using assms(2) unfolding asBD.saction_def 
+proof (intro allI impI, elim conjE)
+  fix s' vl' s1' vl1'
+  assume leq: "s \<approx>\<^sub>\<L> s1"
+     and validTrans: "validTrans (s, s')" "validTrans (s1, s1')"
+     and consume: "consume s vl vl'" "consume s1 vl vl1'"
+  have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
+    using leq low_equiv_interE by blast
+  have vls: \<open>vl' = vl1'\<close>
+    using consume by (elim consume2_eqE[OF eqInter])
+  hence consume': \<open>consume s1 vl vl'\<close>
+    using consume(2) by clarify
+  have nxt: \<open>hopeless s' vl' \<or> hopeless s1' vl' \<or> \<Delta> s' vl' s1' \<and> s' \<approx>\<^sub>\<L> s1'\<close>
+    using validTrans consume(1) consume' 
+    using assms(1) unfolding saction_def apply -
+    apply (erule allE[where x = s'], erule allE[where x = vl'], 
+           elim allE[where x = s1'] impE)
+    by auto
+  have obs: \<open>getObs s = getObs s1\<close>
+    using leq apply (elim lowEquiv_imp_getObs[rotated])
+    by (elim isInter_consume2_eqE[OF eqInter _ consume(1) consume'])
+  thus "hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s = getObs s1 \<and> \<Delta> s' vl' s1' \<and> s' \<approx>\<^sub>\<L> s1' \<and> 
           vl' = vl1'"
-      using nxt vls by simp
-  qed
-  .
+    using nxt vls by simp
+qed
 
 (* *)
 
@@ -336,7 +320,7 @@ abbreviation \<open>unwindFor \<Delta> s vl s1 \<equiv>
 
 lemma unwindFor_asBD:
   assumes \<open>unwindFor \<Delta> s vl s1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
-    and nh: \<open>\<not> hopeless s vl\<close> \<open>\<not> hopeless s1 vl\<close> and \<Delta>: \<open>\<Delta> s vl s1\<close>
+    and nh: \<open>\<not> hopeless s vl\<close> \<open>\<not> hopeless s1 vl\<close>
   shows \<open>asBD.unwindFor (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl\<close>
 using assms(1) proof (elim conjE,intro conjI)
   have eqInter: \<open>isInter s \<longleftrightarrow> isInter s1\<close>
@@ -359,7 +343,7 @@ next
 next
   assume \<open>saction \<Delta> s vl s1\<close>
     thus \<open>asBD.saction (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl\<close>
-    using leq nh \<Delta> by (rule saction_asBD)
+    using leq nh by (rule saction_asBD)
 qed
 
 abbreviation \<open>reachNT \<equiv> asBD.reachNT\<close>
@@ -384,24 +368,21 @@ proof (rule ForAll_ForAll_Secure_imp_secure[OF asBD.unwind_secure[where \<Delta>
     by (rule init)
 next
   show \<open>asBD.unwind (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1  \<and> vl = vl1)\<close>
-  unfolding asBD.unwind_def
-  proof (simp add: isObs,intro allI impI; elim conjE)
+  unfolding asBD.unwind_def proof (intro allI impI ; elim conjE)
     fix s vl s1 vl1
     assume r1: \<open>reachNT s\<close> and r2: \<open>reachNT s1\<close>
        and \<Delta>:  \<open>\<Delta> s vl s1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
-    show \<open>hopeless s vl \<or> hopeless s1 vl \<or>
-          asBD.unwindFor (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1  \<and> vl = vl1) s vl s1 vl\<close>
-    proof (cases \<open>hopeless s vl\<close>)
-      case hopeless: False
-      show ?thesis 
-      proof (cases \<open>hopeless s1 vl\<close>)
-        case hopeless1: False
-        have \<open>unwindFor \<Delta> s vl s1\<close>
-          using unwind[unfolded unwind_def] r1 r2 \<Delta> hopeless hopeless1 leq by auto
-        thus ?thesis
-          using leq hopeless hopeless1 \<Delta> by (intro disjI2 unwindFor_asBD)
-      qed (rule disjI2, rule disjI1)
-    qed (rule disjI1)
+       and vl_def: \<open>vl = vl1\<close>
+    show \<open>hopeless s vl \<or> hopeless s1 vl1 \<or>
+          asBD.unwindFor (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1  \<and> vl = vl1) s vl s1 vl1\<close>
+      unfolding vl_def[symmetric] sketch (intro disj_notI1)
+    proof (intro disj_notI1)
+      assume hopeless: "\<not> hopeless s vl" "\<not> hopeless s1 vl"
+      have \<open>unwindFor \<Delta> s vl s1\<close>
+        using unwind[unfolded unwind_def] r1 r2 \<Delta> hopeless leq by auto
+      thus "asBD.unwindFor (\<lambda>s vl s1 vl1. \<Delta> s vl s1 \<and> s \<approx>\<^sub>\<L> s1 \<and> vl = vl1) s vl s1 vl"
+        using leq hopeless by (rule unwindFor_asBD)
+    qed
   qed
 qed
 

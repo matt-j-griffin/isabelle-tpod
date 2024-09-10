@@ -15,7 +15,7 @@ no_notation relcomp (infixr "O" 75)
 no_notation Trivia.Rcons (infix "##" 70)
 no_notation Trivia.lmember ("(_/ \<in>\<in> _)" [50, 51] 50)
 
-locale BD_Security_STS = System_Model istate validTrans final
+locale BD_Security_STS = System_Mod istate validTrans final
   for istate :: "'state \<Rightarrow> bool" and validTrans :: "('state \<times> 'state) \<Rightarrow> bool"
   and final :: "'state \<Rightarrow> bool"
 
@@ -29,8 +29,6 @@ fixes (* secret filtering and production:  *)
  and (* declassification bound: *)
    B :: "'state \<Rightarrow> 'secret list \<Rightarrow> 'state \<Rightarrow> 'secret list \<Rightarrow> bool"
 
-(*assumes final_no_Sec: "final x \<Longrightarrow> \<not>isSec x" (* can get rid of this *)*)
-    (*and final_no_Obs: "final x \<Longrightarrow> \<not>isObs x"*)
 begin
 
 (* The secrecy function: *)
@@ -626,6 +624,34 @@ definition iactionLeft where
    (\<not> isObs s \<longrightarrow> hopeless s' vl' \<or> \<Delta> s' vl' s1 vl1) \<and> 
    (isObs s \<and> final s1 \<and> consume s1 vl1 [] \<longrightarrow> hopeless s' vl')"
 
+lemma iactionLeft_impI:
+  assumes major: "iactionLeft \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2" 
+      and imp: \<open>\<And>s\<^sub>1' vl\<^sub>1'. \<lbrakk>\<not>isObs s\<^sub>1; validTrans (s\<^sub>1, s\<^sub>1'); consume s\<^sub>1 vl\<^sub>1 vl\<^sub>1'; \<Lambda>1 s\<^sub>1' vl\<^sub>1' s\<^sub>2 vl\<^sub>2;
+                   \<not>hopeless s\<^sub>1' vl\<^sub>1'\<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1' vl\<^sub>1' s\<^sub>2 vl\<^sub>2\<close>
+    shows "iactionLeft \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+  unfolding iactionLeft_def 
+proof (intro allI impI ; elim conjE)
+  fix s' vl'
+  assume vt: "validTrans (s\<^sub>1, s')"
+    and consume: "consume s\<^sub>1 vl\<^sub>1 vl'"
+  hence major:"(\<not> isObs s\<^sub>1 \<longrightarrow> hopeless s' vl' \<or> \<Lambda>1 s' vl' s\<^sub>2 vl\<^sub>2) \<and> (isObs s\<^sub>1 \<and> final s\<^sub>2 \<and> consume s\<^sub>2 vl\<^sub>2 [] \<longrightarrow> hopeless s' vl')"
+    using major unfolding iactionLeft_def apply (elim allE[where x = s'] allE[where x = vl'] impE)
+    by (intro conjI)
+  show "(\<not> isObs s\<^sub>1 \<longrightarrow> hopeless s' vl' \<or> \<Lambda>2 s' vl' s\<^sub>2 vl\<^sub>2) \<and> (isObs s\<^sub>1 \<and> final s\<^sub>2 \<and> consume s\<^sub>2 vl\<^sub>2 [] \<longrightarrow> hopeless s' vl')"
+  proof (intro impI conjI ; (elim conjE) ?)
+    assume "\<not> isObs s\<^sub>1"
+    thus "hopeless s' vl' \<or> \<Lambda>2 s' vl' s\<^sub>2 vl\<^sub>2"
+      using major vt consume apply simp
+      apply (elim disjE, simp_all)
+      by (intro disj_notI1 imp)
+  next
+    assume "isObs s\<^sub>1"
+      and "final s\<^sub>2"
+      and "consume s\<^sub>2 vl\<^sub>2 []"
+    thus "hopeless s' vl'"
+      using major by simp
+  qed
+qed
 
 definition iactionRight where
 "iactionRight \<Delta> s vl s1 vl1 \<equiv>
@@ -634,6 +660,36 @@ definition iactionRight where
    \<longrightarrow> 
    (\<not> isObs s1 \<longrightarrow> hopeless s1' vl1' \<or> \<Delta> s vl s1' vl1') \<and>
    (isObs s1 \<and> final s \<and> consume s vl [] \<longrightarrow> hopeless s1' vl1')"
+
+
+lemma iactionRight_impI:
+  assumes major: "iactionRight \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2" 
+      and imp: \<open>\<And>s\<^sub>2' vl\<^sub>2'. \<lbrakk>\<not>isObs s\<^sub>2; validTrans (s\<^sub>2, s\<^sub>2'); consume s\<^sub>2 vl\<^sub>2 vl\<^sub>2'; \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2' vl\<^sub>2';
+                   \<not>hopeless s\<^sub>2' vl\<^sub>2'\<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2' vl\<^sub>2'\<close>
+    shows "iactionRight \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+  unfolding iactionRight_def 
+proof (intro allI impI ; elim conjE)
+  fix s' vl'
+  assume vt: "validTrans (s\<^sub>2, s')"
+    and consume: "consume s\<^sub>2 vl\<^sub>2 vl'"
+  hence major:"(\<not> isObs s\<^sub>2 \<longrightarrow> hopeless s' vl' \<or> \<Lambda>1 s\<^sub>1 vl\<^sub>1 s' vl') \<and> (isObs s\<^sub>2 \<and> final s\<^sub>1 \<and> consume s\<^sub>1 vl\<^sub>1 [] \<longrightarrow> hopeless s' vl')"
+    using major unfolding iactionRight_def apply (elim allE[where x = s'] allE[where x = vl'] impE)
+    by (intro conjI)
+  show "(\<not> isObs s\<^sub>2 \<longrightarrow> hopeless s' vl' \<or> \<Lambda>2 s\<^sub>1 vl\<^sub>1 s' vl') \<and> (isObs s\<^sub>2 \<and> final s\<^sub>1 \<and> consume s\<^sub>1 vl\<^sub>1 [] \<longrightarrow> hopeless s' vl')"
+  proof (intro impI conjI ; (elim conjE) ?)
+    assume "\<not> isObs s\<^sub>2"
+    thus "hopeless s' vl' \<or> \<Lambda>2 s\<^sub>1 vl\<^sub>1 s' vl'"
+      using major vt consume apply simp
+      apply (elim disjE, simp_all)
+      by (intro disj_notI1 imp)
+  next
+    assume "isObs s\<^sub>2"
+      and "final s\<^sub>1"
+      and "consume s\<^sub>1 vl\<^sub>1 []"
+    thus "hopeless s' vl'"
+      using major by simp
+  qed
+qed
 
 (* Synchronous action: *)
 definition saction where
@@ -644,6 +700,31 @@ definition saction where
    \<longrightarrow>  
    hopeless s' vl' \<or> hopeless s1' vl1' \<or> 
    (getObs s = getObs s1 \<and> \<Delta> s' vl' s1' vl1')"
+
+
+lemma saction_impI:
+  assumes major: "saction \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2" 
+      and imp: \<open>\<And>s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2'. \<lbrakk>validTrans (s\<^sub>1, s\<^sub>1'); validTrans (s\<^sub>2, s\<^sub>2'); \<Lambda>1 s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2';
+                  consume s\<^sub>1 vl\<^sub>1 vl\<^sub>1'; consume s\<^sub>2 vl\<^sub>2 vl\<^sub>2'; isObs s\<^sub>1; isObs s\<^sub>2; getObs s\<^sub>1 = getObs s\<^sub>2;
+                  \<not> hopeless s\<^sub>1' vl\<^sub>1'; \<not> hopeless s\<^sub>2' vl\<^sub>2'
+            \<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2'\<close>
+    shows "saction \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+unfolding saction_def 
+proof (intro allI impI ; elim conjE)
+  fix s' vl' s1' vl1'
+  assume validTrans: "validTrans (s\<^sub>1, s')" "validTrans (s\<^sub>2, s1')"
+    and consume: "consume s\<^sub>1 vl\<^sub>1 vl'" "consume s\<^sub>2 vl\<^sub>2 vl1'"
+    and isObs: "isObs s\<^sub>1" "isObs s\<^sub>2"
+  hence \<open>hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s\<^sub>1 = getObs s\<^sub>2 \<and> \<Lambda>1 s' vl' s1' vl1'\<close>
+    using major unfolding saction_def apply -
+    apply (erule allE[where x = s'],  erule allE[where x = vl'], 
+           erule allE[where x = s1'], elim impE allE[where x = vl1'])
+    by (intro conjI)
+  thus "hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s\<^sub>1 = getObs s\<^sub>2 \<and> \<Lambda>2 s' vl' s1' vl1'"
+    apply auto
+    using validTrans apply (rule imp) 
+    using consume isObs by auto
+qed
 
 (* *)
 definition \<open>eqObs s s' \<equiv> (isObs s  \<longleftrightarrow> isObs s') \<and> (isObs s  \<longrightarrow> (getObs s  = getObs s'))\<close>
@@ -656,6 +737,31 @@ abbreviation \<open>unwindFor \<Delta> s vl s1 vl1 \<equiv>
    iactionLeft \<Delta> s vl s1 vl1 \<and> 
    iactionRight \<Delta> s vl s1 vl1 \<and> 
    saction \<Delta> s vl s1 vl1\<close>
+
+lemma unwindFor_impI:
+  assumes unwind: \<open>unwindFor \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> 
+      and ialI: \<open>\<And>s\<^sub>1' vl\<^sub>1'. \<lbrakk>\<not>isObs s\<^sub>1; validTrans (s\<^sub>1, s\<^sub>1'); consume s\<^sub>1 vl\<^sub>1 vl\<^sub>1'; \<Lambda>1 s\<^sub>1' vl\<^sub>1' s\<^sub>2 vl\<^sub>2;
+                   \<not>hopeless s\<^sub>1' vl\<^sub>1'\<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1' vl\<^sub>1' s\<^sub>2 vl\<^sub>2\<close>
+      and iarI: \<open>\<And>s\<^sub>2' vl\<^sub>2'. \<lbrakk>\<not>isObs s\<^sub>2; validTrans (s\<^sub>2, s\<^sub>2'); consume s\<^sub>2 vl\<^sub>2 vl\<^sub>2'; \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2' vl\<^sub>2';
+                   \<not>hopeless s\<^sub>2' vl\<^sub>2'\<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2' vl\<^sub>2'\<close>
+      and saI: \<open>\<And>s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2'. \<lbrakk>validTrans (s\<^sub>1, s\<^sub>1'); validTrans (s\<^sub>2, s\<^sub>2'); \<Lambda>1 s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2';
+                  consume s\<^sub>1 vl\<^sub>1 vl\<^sub>1'; consume s\<^sub>2 vl\<^sub>2 vl\<^sub>2'; isObs s\<^sub>1; isObs s\<^sub>2; getObs s\<^sub>1 = getObs s\<^sub>2;
+                  \<not> hopeless s\<^sub>1' vl\<^sub>1'; \<not> hopeless s\<^sub>2' vl\<^sub>2'
+            \<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2'\<close>
+    shows \<open>unwindFor \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+  using unwind proof safe
+  assume "iactionLeft \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+  thus "iactionLeft \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+    using ialI by (rule iactionLeft_impI)
+next
+  assume "iactionRight \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+  thus "iactionRight \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+    using iarI by (rule iactionRight_impI)
+next
+  assume "saction \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+  thus "saction \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+    using saI by (rule saction_impI)
+qed
 
 definition unwind where
 "unwind \<Delta> \<equiv>
@@ -894,112 +1000,12 @@ theorem unwind_secure:
     shows ForAll_ForAll_Secure
   using assms unwind_trace reachNT.Istate unfolding ForAll_ForAll_Secure_def by blast
 
-lemma iactionLeft_impI:
-  assumes major: "iactionLeft \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2" 
-      and imp: \<open>\<And>s\<^sub>1' vl\<^sub>1'. \<lbrakk>\<not>isObs s\<^sub>1; validTrans (s\<^sub>1, s\<^sub>1'); consume s\<^sub>1 vl\<^sub>1 vl\<^sub>1'; \<Lambda>1 s\<^sub>1' vl\<^sub>1' s\<^sub>2 vl\<^sub>2;
-                   \<not>hopeless s\<^sub>1' vl\<^sub>1'\<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1' vl\<^sub>1' s\<^sub>2 vl\<^sub>2\<close>
-    shows "iactionLeft \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-  unfolding iactionLeft_def 
-proof (intro allI impI ; elim conjE)
-  fix s' vl'
-  assume vt: "validTrans (s\<^sub>1, s')"
-    and consume: "consume s\<^sub>1 vl\<^sub>1 vl'"
-  hence major:"(\<not> isObs s\<^sub>1 \<longrightarrow> hopeless s' vl' \<or> \<Lambda>1 s' vl' s\<^sub>2 vl\<^sub>2) \<and> (isObs s\<^sub>1 \<and> final s\<^sub>2 \<and> consume s\<^sub>2 vl\<^sub>2 [] \<longrightarrow> hopeless s' vl')"
-    using major unfolding iactionLeft_def apply (elim allE[where x = s'] allE[where x = vl'] impE)
-    by (intro conjI)
-  show "(\<not> isObs s\<^sub>1 \<longrightarrow> hopeless s' vl' \<or> \<Lambda>2 s' vl' s\<^sub>2 vl\<^sub>2) \<and> (isObs s\<^sub>1 \<and> final s\<^sub>2 \<and> consume s\<^sub>2 vl\<^sub>2 [] \<longrightarrow> hopeless s' vl')"
-  proof (intro impI conjI ; (elim conjE) ?)
-    assume "\<not> isObs s\<^sub>1"
-    thus "hopeless s' vl' \<or> \<Lambda>2 s' vl' s\<^sub>2 vl\<^sub>2"
-      using major vt consume apply simp
-      apply (elim disjE, simp_all)
-      by (intro disj_notI1 imp)
-  next
-    assume "isObs s\<^sub>1"
-      and "final s\<^sub>2"
-      and "consume s\<^sub>2 vl\<^sub>2 []"
-    thus "hopeless s' vl'"
-      using major by simp
-  qed
-qed
-
-lemma iactionRight_impI:
-  assumes major: "iactionRight \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2" 
-      and imp: \<open>\<And>s\<^sub>2' vl\<^sub>2'. \<lbrakk>\<not>isObs s\<^sub>2; validTrans (s\<^sub>2, s\<^sub>2'); consume s\<^sub>2 vl\<^sub>2 vl\<^sub>2'; \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2' vl\<^sub>2';
-                   \<not>hopeless s\<^sub>2' vl\<^sub>2'\<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2' vl\<^sub>2'\<close>
-    shows "iactionRight \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-  unfolding iactionRight_def 
-proof (intro allI impI ; elim conjE)
-  fix s' vl'
-  assume vt: "validTrans (s\<^sub>2, s')"
-    and consume: "consume s\<^sub>2 vl\<^sub>2 vl'"
-  hence major:"(\<not> isObs s\<^sub>2 \<longrightarrow> hopeless s' vl' \<or> \<Lambda>1 s\<^sub>1 vl\<^sub>1 s' vl') \<and> (isObs s\<^sub>2 \<and> final s\<^sub>1 \<and> consume s\<^sub>1 vl\<^sub>1 [] \<longrightarrow> hopeless s' vl')"
-    using major unfolding iactionRight_def apply (elim allE[where x = s'] allE[where x = vl'] impE)
-    by (intro conjI)
-  show "(\<not> isObs s\<^sub>2 \<longrightarrow> hopeless s' vl' \<or> \<Lambda>2 s\<^sub>1 vl\<^sub>1 s' vl') \<and> (isObs s\<^sub>2 \<and> final s\<^sub>1 \<and> consume s\<^sub>1 vl\<^sub>1 [] \<longrightarrow> hopeless s' vl')"
-  proof (intro impI conjI ; (elim conjE) ?)
-    assume "\<not> isObs s\<^sub>2"
-    thus "hopeless s' vl' \<or> \<Lambda>2 s\<^sub>1 vl\<^sub>1 s' vl'"
-      using major vt consume apply simp
-      apply (elim disjE, simp_all)
-      by (intro disj_notI1 imp)
-  next
-    assume "isObs s\<^sub>2"
-      and "final s\<^sub>1"
-      and "consume s\<^sub>1 vl\<^sub>1 []"
-    thus "hopeless s' vl'"
-      using major by simp
-  qed
-qed
-
-lemma saction_impI:
-  assumes major: "saction \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2" 
-      and imp: \<open>\<And>s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2'. \<lbrakk>validTrans (s\<^sub>1, s\<^sub>1'); validTrans (s\<^sub>2, s\<^sub>2'); \<Lambda>1 s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2';
-                  consume s\<^sub>1 vl\<^sub>1 vl\<^sub>1'; consume s\<^sub>2 vl\<^sub>2 vl\<^sub>2'; isObs s\<^sub>1; isObs s\<^sub>2; getObs s\<^sub>1 = getObs s\<^sub>2;
-                  \<not> hopeless s\<^sub>1' vl\<^sub>1'; \<not> hopeless s\<^sub>2' vl\<^sub>2'
-            \<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2'\<close>
-    shows "saction \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-unfolding saction_def 
-proof (intro allI impI ; elim conjE)
-  fix s' vl' s1' vl1'
-  assume validTrans: "validTrans (s\<^sub>1, s')" "validTrans (s\<^sub>2, s1')"
-    and consume: "consume s\<^sub>1 vl\<^sub>1 vl'" "consume s\<^sub>2 vl\<^sub>2 vl1'"
-    and isObs: "isObs s\<^sub>1" "isObs s\<^sub>2"
-  hence \<open>hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s\<^sub>1 = getObs s\<^sub>2 \<and> \<Lambda>1 s' vl' s1' vl1'\<close>
-    using major unfolding saction_def apply -
-    apply (erule allE[where x = s'],  erule allE[where x = vl'], 
-           erule allE[where x = s1'], elim impE allE[where x = vl1'])
-    by (intro conjI)
-  thus "hopeless s' vl' \<or> hopeless s1' vl1' \<or> getObs s\<^sub>1 = getObs s\<^sub>2 \<and> \<Lambda>2 s' vl' s1' vl1'"
-    apply auto
-    using validTrans apply (rule imp) 
-    using consume isObs by auto
-qed
-
-lemma unwindFor_impI:
-  assumes unwind: \<open>unwindFor \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> 
-      and ialI: \<open>\<And>s\<^sub>1' vl\<^sub>1'. \<lbrakk>\<not>isObs s\<^sub>1; validTrans (s\<^sub>1, s\<^sub>1'); consume s\<^sub>1 vl\<^sub>1 vl\<^sub>1'; \<Lambda>1 s\<^sub>1' vl\<^sub>1' s\<^sub>2 vl\<^sub>2;
-                   \<not>hopeless s\<^sub>1' vl\<^sub>1'\<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1' vl\<^sub>1' s\<^sub>2 vl\<^sub>2\<close>
-      and iarI: \<open>\<And>s\<^sub>2' vl\<^sub>2'. \<lbrakk>\<not>isObs s\<^sub>2; validTrans (s\<^sub>2, s\<^sub>2'); consume s\<^sub>2 vl\<^sub>2 vl\<^sub>2'; \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2' vl\<^sub>2';
-                   \<not>hopeless s\<^sub>2' vl\<^sub>2'\<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2' vl\<^sub>2'\<close>
-      and saI: \<open>\<And>s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2'. \<lbrakk>validTrans (s\<^sub>1, s\<^sub>1'); validTrans (s\<^sub>2, s\<^sub>2'); \<Lambda>1 s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2';
-                  consume s\<^sub>1 vl\<^sub>1 vl\<^sub>1'; consume s\<^sub>2 vl\<^sub>2 vl\<^sub>2'; isObs s\<^sub>1; isObs s\<^sub>2; getObs s\<^sub>1 = getObs s\<^sub>2;
-                  \<not> hopeless s\<^sub>1' vl\<^sub>1'; \<not> hopeless s\<^sub>2' vl\<^sub>2'
-            \<rbrakk> \<Longrightarrow> \<Lambda>2 s\<^sub>1' vl\<^sub>1' s\<^sub>2' vl\<^sub>2'\<close>
-    shows \<open>unwindFor \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
-  using unwind proof safe
-  assume "iactionLeft \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-  thus "iactionLeft \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-    using ialI by (rule iactionLeft_impI)
-next
-  assume "iactionRight \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-  thus "iactionRight \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-    using iarI by (rule iactionRight_impI)
-next
-  assume "saction \<Lambda>1 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-  thus "saction \<Lambda>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
-    using saI by (rule saction_impI)
-qed
+lemma final_unwind:
+  assumes final: \<open>\<And> vl vl1 s s1. \<Delta> s vl s1 vl1 \<Longrightarrow> final s \<and> final s1 \<and> eqObs s s1\<close> 
+    shows \<open>unwind \<Delta>\<close>
+  unfolding unwind_def finish_def iactionLeft_def iactionRight_def saction_def 
+  apply (intro allI impI, elim conjE, drule final)
+  using final_def by auto
 
 end (* locale BD_Security_TS *)
 

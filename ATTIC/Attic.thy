@@ -1,10 +1,8 @@
-theory Filtermap_Extensions
-  imports 
-    More_LazyLists.List_Filtermap
-    Trivia_Extensions
+theory Attic 
+  imports Main
 begin
 
-hide_const filtermap
+
 
 (*
 
@@ -449,12 +447,5 @@ qed
 end (* context if_filtermap_def *)
 *)
 
-lemma length_filtermap_eq: \<open>length (filtermap pred func1 xs) = length (filtermap pred func2 xs)\<close>
-proof (induct xs)
-  fix a xs
-  assume IH: "length (filtermap pred func1 xs) = length (filtermap pred func2 xs)"
-    thus "length (filtermap pred func1 (a # xs)) = length (filtermap pred func2 (a # xs))"
-    by (cases \<open>pred a\<close>, simp_all)
-qed simp
 
 end

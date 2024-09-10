@@ -4,7 +4,6 @@
 theory BD_Security_STS
   imports
     "Abstract_BD_Security_Extensions" 
-    "../General_Preliminaries/Filtermap_Extensions" 
     "../General_Preliminaries/Transition_System_Extensions"
     "HOL-ex.Sketch_and_Explore" (* TODO *)
 begin

@@ -3,11 +3,9 @@ theory Transition_System_Extensions
           Relative_Security.Transition_System
 begin
 
-\<comment> \<open>These are just abbreviations so will not impact proofs.\<close>
 
-no_notation Trivia.Rcons (infix "##" 70)
-no_notation Trivia.lmember ("(_/ \<in>\<in> _)" [50, 51] 50)
-(*no_notation Trivia.LNil_abbr ("[[]]")*)
+
+\<comment> \<open>These are just abbreviations so will not impact proofs.\<close>
 
 locale System_Model = 
   Simple_Transition_System istate validTrans   

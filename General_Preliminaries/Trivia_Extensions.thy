@@ -1,10 +1,26 @@
+
+(* TODO TPOD Trivia *)
 theory Trivia_Extensions
   imports 
-    "Bounded_Deducibility_Security.Trivia" 
+    "Bounded_Deducibility_Security.Trivia"
+    More_LazyLists.List_Filtermap
     (*"Relative_Security.RS_Trivia" *)
 (*    "Coinductive.Coinductive_List"*)
     "HOL-ex.Sketch_and_Explore" (* TODO *)
 begin
+
+no_notation Trivia.Rcons (infix "##" 70)
+(*no_notation Trivia.LNil_abbr ("[[]]")*)
+
+
+lemma length_filtermap_eq: \<open>length (filtermap pred func1 xs) = length (filtermap pred func2 xs)\<close>
+proof (induct xs)
+  fix a xs
+  assume IH: "length (filtermap pred func1 xs) = length (filtermap pred func2 xs)"
+    thus "length (filtermap pred func1 (a # xs)) = length (filtermap pred func2 (a # xs))"
+    by (cases \<open>pred a\<close>, simp_all)
+qed simp
+
 
 (* TODO check a lot of this for unused/duplicate theorems *)
 

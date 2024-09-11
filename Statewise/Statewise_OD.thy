@@ -1,52 +1,24 @@
 theory Statewise_OD
-  imports
-    Statewise_OD_Base
+  imports Statewise_OD_Base
 begin
 
 locale Statewise_OD = System_Mod istate validTrans final
   for istate :: \<open>'state \<Rightarrow> bool\<close> and validTrans :: \<open>'state \<times> 'state \<Rightarrow> bool\<close>
   and final :: \<open>'state \<Rightarrow> bool\<close>
 + 
-fixes isInter :: \<open>'state \<Rightarrow> bool\<close> and op\<^sub>\<L> :: \<open>'state \<Rightarrow> 'lowOp\<close>
+  fixes isInter :: \<open>'state \<Rightarrow> bool\<close> and op\<^sub>\<L> :: \<open>'state \<Rightarrow> 'lowOp\<close>
     and low_equiv :: \<open>'state \<Rightarrow> 'state \<Rightarrow> bool\<close> (infixl \<open>\<approx>\<^sub>\<L>\<close> 100)
 
 
   assumes isInter_not_final: \<open>\<And>x. final x \<Longrightarrow> \<not> isInter x\<close>
-      assumes equivp_lowEquiv: \<open>\<And>x y. \<lbrakk>isInter x \<Longrightarrow> op\<^sub>\<L> x = op\<^sub>\<L> y\<rbrakk> \<Longrightarrow> x \<approx>\<^sub>\<L> y = ((\<approx>\<^sub>\<L>) x = (\<approx>\<^sub>\<L>) y)\<close> (* Equivalence under assumptions *)
+      and equivp_lowEquiv: \<open>\<And>x y. \<lbrakk>isInter x \<Longrightarrow> op\<^sub>\<L> x = op\<^sub>\<L> y\<rbrakk> \<Longrightarrow> x \<approx>\<^sub>\<L> y = ((\<approx>\<^sub>\<L>) x = (\<approx>\<^sub>\<L>) y)\<close> (* Equivalence under assumptions *)
 
-      and reflp_lowEquiv: \<open>reflp ((\<approx>\<^sub>\<L>)::'state \<Rightarrow> 'state \<Rightarrow> bool)\<close>
-      and symp_lowEquiv: \<open>symp ((\<approx>\<^sub>\<L>)::'state \<Rightarrow> 'state \<Rightarrow> bool)\<close>
+      and reflp_lowEquiv: \<open>reflp (\<approx>\<^sub>\<L>)\<close>
+      and symp_lowEquiv: \<open>symp (\<approx>\<^sub>\<L>)\<close>
 
       and low_equiv_interE: \<open>\<And>x y. \<lbrakk>x \<approx>\<^sub>\<L> y; isInter x \<longleftrightarrow> isInter y \<Longrightarrow> P\<rbrakk> \<Longrightarrow> P\<close>
-(*
-fixes TEST :: "'lowOp set"
-*)
+
 begin
-(*
-(*equivp TEST *) 
-abbreviation "EXAMPLE x y \<equiv> ((isInter x \<longleftrightarrow> isInter y) \<and> ((isInter x \<longrightarrow> (op\<^sub>\<L> x \<in> TEST \<and> op\<^sub>\<L> y \<in> TEST)) \<longrightarrow> x = y)) "
-
-lemma "EXAMPLE x y \<Longrightarrow> isInter x \<longleftrightarrow> isInter y"
-  by auto
-
-lemma reflp_E: \<open>reflp EXAMPLE\<close>
-  unfolding reflp_def by auto
-
-lemma symp_E: \<open>symp EXAMPLE\<close>
-  unfolding symp_def by auto
-
-lemma transp_asms: \<open>\<And>x y z. \<lbrakk>isInter x \<Longrightarrow> op\<^sub>\<L> x = op\<^sub>\<L> y\<rbrakk> \<Longrightarrow> 
-       EXAMPLE x y \<longrightarrow>
-       EXAMPLE y z \<longrightarrow> 
-       EXAMPLE x z\<close>
-  by auto
-(* Equivalence under assumptions *)
-
-lemma equivp_lowEquivQ:
-  \<open>\<And>x y. \<lbrakk>(isInter x \<Longrightarrow> op\<^sub>\<L> x = op\<^sub>\<L> y)\<rbrakk> \<Longrightarrow> EXAMPLE x y = (EXAMPLE x = EXAMPLE y)\<close> 
-  apply auto
-  by metis+
-*)
 
 sublocale base: Statewise_OD_Base
   where istate = istate and validTrans = validTrans and final = final and isInter = isInter 
@@ -87,7 +59,7 @@ lemma secure_alt_def: \<open>secure =
 
 no_notation base.low_equivs (infixl \<open>\<approx>\<^sub>\<L>\<^sub>s\<close> 100)
 
-text \<open>OD as instance of \<forall>\<forall> BD Security:\<close>
+text \<open>OD as instance of forall forall BD Security:\<close>
 
 lemma never_u[simp]: \<open>never (Not \<circ> (\<lambda>_. True)) \<pi>\<close>
   by auto
@@ -95,14 +67,7 @@ lemma never_u[simp]: \<open>never (Not \<circ> (\<lambda>_. True)) \<pi>\<close>
 lemma S_ops\<^sub>\<L>: 
   assumes \<open>ops\<^sub>\<L> \<pi>\<^sub>1 = ops\<^sub>\<L> \<pi>\<^sub>2\<close>
     shows \<open>unzipL (base.asBD.S \<pi>\<^sub>1) = unzipL (base.asBD.S \<pi>\<^sub>2)\<close>
-using assms unfolding base.asBD.S_def base.getSec_def ops\<^sub>\<L>_def 
-proof auto
-  assume a1: "List_Filtermap.filtermap isInter op\<^sub>\<L> \<pi>\<^sub>1 = List_Filtermap.filtermap isInter op\<^sub>\<L> \<pi>\<^sub>2"
-  have "base.getSec = (\<lambda>s. (op\<^sub>\<L> s, Suc 0))"
-    using One_nat_def base.getSec_def by presburger
-  then show "unzipL (List_Filtermap.filtermap isInter (\<lambda>s. (op\<^sub>\<L> s, Suc 0)) \<pi>\<^sub>1) = unzipL (List_Filtermap.filtermap isInter (\<lambda>s. (op\<^sub>\<L> s, Suc 0)) \<pi>\<^sub>2)"
-    using a1 base.S_unzipL base.asBD.S_def ops\<^sub>\<L>_def by moura
-qed
+using assms unfolding base.asBD.S_def base.getSec_def ops\<^sub>\<L>_def map_filtermap comp_apply fst_conv .
 
 lemma bounds:
   assumes \<open>ops\<^sub>\<L> \<pi>\<^sub>1 = ops\<^sub>\<L> \<pi>\<^sub>2\<close> \<open>hd \<pi>\<^sub>1 \<approx>\<^sub>\<L> hd \<pi>\<^sub>2\<close>
@@ -110,8 +75,7 @@ lemma bounds:
   using assms unfolding base.B_def by (intro conjI S_ops\<^sub>\<L>)
 
 lemma ForAll_ForAll_Secure_imp_secure: "base.asBD.ForAll_ForAll_Secure \<Longrightarrow> secure"
-  unfolding secure_alt_def sketch safe
-proof safe
+unfolding secure_alt_def proof safe
   fix \<pi>\<^sub>1 \<pi>\<^sub>2 
   assume secure: base.asBD.ForAll_ForAll_Secure
     and i: "istate (hd \<pi>\<^sub>1)" "istate (hd \<pi>\<^sub>2)"
@@ -236,8 +200,7 @@ definition unwind where
 lemma base_unwindI:
   assumes unwind: \<open>unwind \<Delta>\<close>
     shows \<open>base.unwind (\<lambda>s vl s1 vl1. \<Delta> s (unzipL vl) s1)\<close>
-unfolding base.unwind_def sketch (intro allI impI disj_notI1; elim conjE)
-proof (intro allI impI disj_notI1 ; elim conjE)
+unfolding base.unwind_def proof (intro allI impI disj_notI1 ; elim conjE)
   fix s vl s1 vl1 
   assume "\<not> base.hopeless s vl" "\<not> base.hopeless s1 vl1"
      "reachNT s"

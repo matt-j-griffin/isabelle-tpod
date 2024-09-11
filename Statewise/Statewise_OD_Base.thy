@@ -1,7 +1,6 @@
 theory Statewise_OD_Base
   imports "../ForAllForAllSecure/BD_Security_STS"
           "../OD"
-          "HOL-ex.Sketch_and_Explore" (* TODO *)
 begin
 
 
@@ -47,7 +46,7 @@ abbreviation
   \<open>validTrace \<pi> \<equiv> istate (hd \<pi>) \<and> validFromS (hd \<pi>) \<pi> \<and> completedFrom (hd \<pi>) \<pi> \<and> \<pi> \<noteq> []\<close>
 
 
-text \<open>OD as instance of \<forall>\<forall> BD Security:\<close>
+text \<open>OD as instance of forall forall BD Security:\<close>
 
 definition isObs :: "'state \<Rightarrow> bool" where 
 "isObs s \<equiv> True"
@@ -74,7 +73,7 @@ lemma lowEquiv_imp_getObs: "\<lbrakk>isInter s \<Longrightarrow>  op\<^sub>\<L> 
   
 definition \<open>ops\<^sub>\<H> = filtermap isInter op\<^sub>\<H>\<close>
 
-text \<open>OD with High Ops as instance of \<forall>\<forall> BD Security:\<close>
+text \<open>OD with High Ops as instance of forall forall BD Security:\<close>
 
 definition 
   getSec :: \<open>'state \<Rightarrow> ('lowOp \<times> 'highOp)\<close>
@@ -246,8 +245,7 @@ lemma iactionRight_asBD:
   assumes iar: \<open>iactionRight s vl s1 vl1\<close>
       and length_vls: \<open>length vl = length vl1\<close>
     shows \<open>asBD.iactionRight \<Delta> s vl s1 vl1\<close>
-unfolding asBD.iactionRight_def sketch safe
-proof safe
+unfolding asBD.iactionRight_def proof safe
   fix s1' :: 'state and vl1' :: "('lowOp \<times> 'highOp) list"
   assume vT: "validTrans (s1, s1')"
     and consume1: "consume s1 vl1 vl1'"

@@ -268,7 +268,7 @@ abbreviation \<open>consume\<^sub>o\<^sub>p\<^sub>t \<equiv> Opt.consume\<close>
 
 lemma lowEquiv_finish: 
   \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<Longrightarrow> asCBD.Opt.finish s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
-unfolding asCBD.Opt.finish_def eqObs\<^sub>o\<^sub>p\<^sub>t_def sketch (intro impI Opt.lowEquiv_imp_getObs, elim conjE)
+unfolding asCBD.Opt.finish_def eqObs\<^sub>o\<^sub>p\<^sub>t_def 
 proof (intro impI Opt.lowEquiv_imp_getObs, elim conjE)
   assume "isInter\<^sub>o\<^sub>p\<^sub>t s\<^sub>1" "final\<^sub>o\<^sub>p\<^sub>t s\<^sub>1"
   thus "op\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 = op\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2"
@@ -347,7 +347,7 @@ lemma saction_asCBD:
       and others: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1\<close> \<open>\<not> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2\<close>
             \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close>
     shows \<open>asCBD.saction (\<Lambda> \<Theta>) cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
-unfolding asCBD.saction_def sketch (intro allI impI; elim conjE; intro disj_notI1)
+unfolding asCBD.saction_def
 proof (intro allI impI ; elim conjE ; intro disj_notI1)
   fix cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2' 
   assume vT: "validTrans\<^sub>v\<^sub>a\<^sub>n (cs\<^sub>1, cs\<^sub>1')" "validTrans\<^sub>v\<^sub>a\<^sub>n (cs\<^sub>2, cs\<^sub>2')"

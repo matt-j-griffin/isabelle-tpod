@@ -16,6 +16,10 @@ locale TPOD =
  fixes ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n :: \<open>'vstate trace \<Rightarrow> 'hop\<close> and ops\<^sub>\<H>\<^sub>o\<^sub>p\<^sub>t :: \<open>'ostate trace \<Rightarrow> 'hop\<close>
 begin
 
+no_notation Van.low_equivs (infixl \<open>\<approx>\<^sub>\<L>\<^sub>s\<close> 100)
+no_notation Opt.low_equivs (infixl \<open>\<approx>\<^sub>\<L>\<^sub>s\<close> 100)
+
+
 abbreviation 
   low_equivs\<^sub>v\<^sub>a\<^sub>n :: \<open>'vstate trace \<Rightarrow> 'vstate trace \<Rightarrow> bool\<close>  (infixl \<open>\<approx>\<^sub>\<L>\<^sub>s\<^sub>v\<^sub>a\<^sub>n\<close> 100)
 where

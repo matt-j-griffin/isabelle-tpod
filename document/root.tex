@@ -12,29 +12,41 @@
 
 \begin{document}
 
-\title{Abstract Inference Triples}
-\author{Matt Griffin \and Brijesh Dongol \and Azalea Raad}
+\title{TPOD}
+\author{Matt Griffin \and Brijesh Dongol \and Andrei Popescu}
 \maketitle
 
 \begin{abstract}
-  This entry formalises (in)correctness triples over abstract big-step execution semantics. 
-  The aim is to provide a common base for triple-style (in)correctness logics, reducing syntax and 
-  theory duplication.
+  This entry formalises Cheang et al.'s Trace Property-Dependent Observational Determinism (TPOD)
+  hyperproperty for categorising secure speculation in Isabelle/HOL. 
 
-  This work was developed as part of the POPL 2024 paper ``IsaBIL: A Framework for Verifying 
-  (In)correctness of Binaries in Isabelle/HOL'' by Matt~Griffin, Brijesh~Dongol and 
-  Azalea~Raad~\cite{LNCS2283}.
+  This work was developed as part of 2024 thesis ``Binary Analysis in Isabelle/HOL'' by 
+  Matt~Griffin~\cite{LNCS2283}.
 
-  This entry defines three triples: \emph{partial correctness}, total \emph{correctness} and \emph{incorrectness}.
-  Formalised in locales, these triples encode common inference rules, such as pre/postcondition 
-  strengthening/weakening and conjunction/disjunction, which apply to all instantiations of the 
-  triples regardless of the execution semantics.
+  The aim of this development is to allow for high-assurance, unwinding style proofs of TPOD in an
+  abstract setting.
 
-  In order to verify the accuracy of the triples, and to motivate their use, we this entry presents 
-  various instantiations of the triples for the numerous (in)correctness logics found
-  in the Isabelle/HOL standard library and the AFP.
+  Following Cheang et al.'s approach, we start by defining Observational Determinism (OD), a well
+  known two-trace hyperproperty from the literature which underpins TPOD.
+  In a departure from Cheang et al., we define a variant of TPOD which reasons over 
+  two systems (as opposed to one) which provides greater proof flexibility.
+  We extend TPOD with an antecedent trace property $U$ used to conform traces as described by 
+  Cheang et al. as Conformant TPOD (CTPOD).
+  For validity, we prove that our ``two-system'' TPOD hyperproperties are equivalent to 
+  Cheang et al.'s definitions under the assumption that the two systems are equal.
 
-  Our hope is that in future, new logics for (in)correctness will use these abstract triples.
+
+  TODO: statewise - we use a common system model with finality, formalised in Relative secuirty
+
+  To derive unwinding proof methods for OD and TPOD, we leverage Popescu et al.'s BD Security \cite{BD}.
+  Existing definitions are not enough, so we define a new BD security property for all for all
+security and give it an unwinding proof method.
+We now prove that it is an instance of Popescu et al.'s BD security.
+
+
+  Our definitions of TPOD are abstract, levereaging locales in its development.
+  It is our hope that others will instantiate these locales with their own language semantics to 
+  prove secure speculation.
 
 \end{abstract}
 
@@ -42,10 +54,6 @@
 
 % include generated text of all theories
 \input{session}
-
-\section{Examples}
-
-We validate our XYZ...
 
 \bibliographystyle{abbrv}
 \bibliography{root}

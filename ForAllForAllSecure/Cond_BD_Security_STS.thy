@@ -2,6 +2,7 @@ theory Cond_BD_Security_STS
   imports
     Cond_Abstract_BD_Security
     BD_Security_STS
+    "HOL-ex.Sketch_and_Explore" (*TODO remove*)
 begin
 
 locale Cond_BD_Security_STS =
@@ -457,17 +458,35 @@ qed
 
 theorem unwind_secure:
   assumes init: "\<And>cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2. \<lbrakk>
-            B cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2; istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1; istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2; istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1; istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>2
+          B cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2; istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1; istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2; istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1; istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>2;
+          \<lbrakk>isObs\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1; isObs\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<rbrakk> \<Longrightarrow> getObs\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 = getObs\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2
         \<rbrakk> \<Longrightarrow> \<Delta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
       and unwind: "unwind \<Delta>"
     shows ForAll_ForAll_CSecure
-  unfolding ForAll_ForAll_CSecure_def apply clarify
-  subgoal for ctr\<^sub>1 ctr\<^sub>2 tr\<^sub>1 tr\<^sub>2
-    apply (rule unwind_trace[OF unwind Van.reachNT.Istate Van.reachNT.Istate Opt.reachNT.Istate Opt.reachNT.Istate init, 
+unfolding ForAll_ForAll_CSecure_def proof clarify
+  fix ctr\<^sub>1 ctr\<^sub>2 :: "'vstate list" and tr\<^sub>1  tr\<^sub>2 :: "'ostate list"
+  assume never: "List_Filtermap.never T\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1" "List_Filtermap.never T\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2"
+         "List_Filtermap.never T\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1" "List_Filtermap.never T\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
+     and i: "istate\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>1)" "istate\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>2)" "istate\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>1)" "istate\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>2)"
+    and valid: "validFromS\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>1) ctr\<^sub>1" "validFromS\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>2) ctr\<^sub>2" 
+               "validFromS\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>1) tr\<^sub>1" "validFromS\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>2) tr\<^sub>2"
+    and completed: "completedFrom\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>1) ctr\<^sub>1" "completedFrom\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>2) ctr\<^sub>2"
+                   "completedFrom\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>1) tr\<^sub>1" "completedFrom\<^sub>o\<^sub>p\<^sub>t (hd tr\<^sub>2) tr\<^sub>2"
+    and nempty: "ctr\<^sub>1 \<noteq> []" "ctr\<^sub>2 \<noteq> []" "tr\<^sub>1 \<noteq> []" "tr\<^sub>2 \<noteq> []"
+    and B: "B (hd ctr\<^sub>1) (S\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1) (hd ctr\<^sub>2) (S\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2) (hd tr\<^sub>1) (S\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1) (hd tr\<^sub>2) (S\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2)"
+    and O: "O\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>1 = O\<^sub>v\<^sub>a\<^sub>n ctr\<^sub>2"
+  have Obs: \<open>\<lbrakk>isObs\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>1); isObs\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>2)\<rbrakk> \<Longrightarrow> getObs\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>1) = getObs\<^sub>v\<^sub>a\<^sub>n (hd ctr\<^sub>2)\<close>
+    using O nempty apply (cases ctr\<^sub>1, auto)
+    apply (cases ctr\<^sub>2, auto)
+    done
+  show "O\<^sub>o\<^sub>p\<^sub>t tr\<^sub>1 = O\<^sub>o\<^sub>p\<^sub>t tr\<^sub>2"
+    using unwind i B i Obs
+    apply (rule unwind_trace[OF _ Van.reachNT.Istate Van.reachNT.Istate Opt.reachNT.Istate Opt.reachNT.Istate init,
           where cs\<^sub>2 = \<open>hd ctr\<^sub>2\<close> and s\<^sub>2 = \<open>hd tr\<^sub>2\<close>])
+    using never valid completed nempty O apply -
     apply assumption+
     by standard+
-  .
+qed
 
 end
 

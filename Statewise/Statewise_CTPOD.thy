@@ -29,8 +29,8 @@ text \<open>Abbreviations for naming consistency\<close>
 
 abbreviation \<open>validFromS\<^sub>v\<^sub>a\<^sub>n \<equiv> Van.validFromS\<close>
 abbreviation \<open>validFromS\<^sub>o\<^sub>p\<^sub>t \<equiv> Opt.validFromS\<close>
-abbreviation \<open>completedFrom\<^sub>v\<^sub>a\<^sub>n \<equiv> Van.completedFrom\<close>
-abbreviation \<open>completedFrom\<^sub>o\<^sub>p\<^sub>t \<equiv> Opt.completedFrom\<close>
+abbreviation \<open>completedFrom\<^sub>v\<^sub>a\<^sub>n \<equiv> Van.completedFrom\<close> lemmas completedFrom\<^sub>v\<^sub>a\<^sub>n_def = Van.completedFrom_def
+abbreviation \<open>completedFrom\<^sub>o\<^sub>p\<^sub>t \<equiv> Opt.completedFrom\<close> lemmas completedFrom\<^sub>o\<^sub>p\<^sub>t_def = Opt.completedFrom_def
 abbreviation \<open>ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n \<equiv> Van.ops\<^sub>\<L>\<close> lemmas ops\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n_def = Van.ops\<^sub>\<L>_def
 abbreviation \<open>ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t \<equiv> Opt.ops\<^sub>\<L>\<close> lemmas ops\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t_def = Opt.ops\<^sub>\<L>_def
 abbreviation \<open>ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n \<equiv> Van.ops\<^sub>\<H>\<close> lemmas ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n_def = Van.ops\<^sub>\<H>_def
@@ -201,8 +201,6 @@ lemmas S_ops\<^sub>v\<^sub>a\<^sub>n = Van.S_eq_ops
 lemma S_ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n[simp]: \<open>unzipR (asCBD.S\<^sub>v\<^sub>a\<^sub>n tr) = ops\<^sub>\<H>\<^sub>v\<^sub>a\<^sub>n tr\<close>
   unfolding S_ops\<^sub>v\<^sub>a\<^sub>n by (intro map_snd_zip Van.length_ops)
 
-lemmas zip_injectI = arg_cong2[where f = zip]
-
 lemma asCBD_secureI: 
   assumes asCBD.ForAll_ForAll_CSecure 
     shows secure
@@ -253,6 +251,12 @@ abbreviation \<open>\<Lambda> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^s
 
 definition \<open>proaction \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 \<equiv> Opt.unwindFor (\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2)\<close>
 
+lemma proaction_mono[intro]: 
+  assumes \<Theta>: \<open>\<Theta> \<le> \<Theta>'\<close> and proaction: \<open>proaction \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    shows \<open>proaction \<Theta>' cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+  unfolding proaction_def apply (rule Opt.unwindFor_mono[OF _ proaction[unfolded proaction_def]])  
+  using \<Theta> by (metis le_funE)
+
 lemma eqObs\<^sub>v\<^sub>a\<^sub>n_def: \<open>asCBD.eqObs\<^sub>v\<^sub>a\<^sub>n s s' \<longleftrightarrow> getObs\<^sub>v\<^sub>a\<^sub>n s = getObs\<^sub>v\<^sub>a\<^sub>n s'\<close>
   unfolding asCBD.eqObs\<^sub>v\<^sub>a\<^sub>n_def using Van.isObs by auto
 
@@ -289,6 +293,20 @@ lemma unwindForOD_asCBD:
 definition \<open>finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<equiv>
   final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> cvl\<^sub>1 = [] \<and> cvl\<^sub>2 = [] \<and> cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<longrightarrow>
   Opt.unwindFor (\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2) s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+
+lemma finish_mono[intro]: 
+  assumes \<Theta>: \<open>\<Theta> \<le> \<Theta>'\<close> and finish: \<open>finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    shows \<open>finish \<Theta>' cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+unfolding finish_def proof (rule impI; elim conjE)
+  assume \<open>final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1\<close> \<open>final\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<close> \<open>cvl\<^sub>1 = []\<close> \<open>cvl\<^sub>2 = []\<close> \<open>cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<close> 
+  hence unwindForOD: \<open>unwindForOD (\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2) s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    using finish[unfolded finish_def] apply (elim impE)
+    by (intro conjI)
+  have \<Theta>: \<open>\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 \<le> \<Theta>' cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2\<close>
+    using \<Theta> by (simp add: le_funD)
+  show \<open>unwindForOD (\<Theta>' cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2) s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    using \<Theta> unwindForOD by (rule Opt.unwindFor_mono)
+qed
 
 lemma finish_asCBD:
   assumes finish: \<open>finish \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> 
@@ -430,29 +448,126 @@ unfolding asCBD.unwind_def proof (intro allI impI, elim conjE)
     .
 qed
 
-lemma unwind_secure:
-  assumes init: \<open>(\<And>cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2. \<lbrakk>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2; unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2;
-              unzipL vl\<^sub>1 = unzipL vl\<^sub>2; cvl\<^sub>1 = vl\<^sub>1; cvl\<^sub>2 = vl\<^sub>2;
+definition
+  \<open>initCond \<Theta> \<equiv> (\<forall>cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2. (s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<and> unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2 \<and>
+              unzipL vl\<^sub>1 = unzipL vl\<^sub>2 \<and> cvl\<^sub>1 = vl\<^sub>1 \<and> cvl\<^sub>2 = vl\<^sub>2 \<and> cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> 
+              istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 \<and> istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>2)
+            \<longrightarrow> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2)\<close>
+
+lemma initCondI[intro]:
+  assumes init: \<open>\<And>cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2. \<lbrakk>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2; unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2;
+              unzipL vl\<^sub>1 = unzipL vl\<^sub>2; cvl\<^sub>1 = vl\<^sub>1; cvl\<^sub>2 = vl\<^sub>2; cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2;
               istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1; istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2; istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1; istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<rbrakk> 
-            \<Longrightarrow> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2)\<close>
-      and unwind: \<open>unwind \<Theta>\<close>
+            \<Longrightarrow> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    shows \<open>initCond \<Theta>\<close>
+  unfolding initCond_def by safe (intro refl init)
+
+lemma unwind_secure:
+  assumes init: \<open>initCond \<Theta>\<close> and unwind: \<open>unwind \<Theta>\<close>
     shows secure
 proof (rule asCBD_secureI [OF asCBD.unwind_secure [where \<Delta> = \<open>\<Lambda> \<Theta>\<close>]])
   fix cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 
   assume B: "asCBD.B cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+    and O: \<open>Van.isObs cs\<^sub>1 \<Longrightarrow> Van.isObs cs\<^sub>2 \<Longrightarrow> getObs\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 = getObs\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<close>
     and istate: "istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1" "istate\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2"  "istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>1"  "istate\<^sub>o\<^sub>p\<^sub>t s\<^sub>2"
-  also have asm: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close> \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>cvl\<^sub>1 = vl\<^sub>1\<close> 
+  have leq: \<open>cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<close>
+    by (intro Van.getObs_imp_lowEquiv O Van.isObs)
+  have asm: \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> \<open>unzipL cvl\<^sub>1 = unzipL cvl\<^sub>2\<close> \<open>unzipL vl\<^sub>1 = unzipL vl\<^sub>2\<close> \<open>cvl\<^sub>1 = vl\<^sub>1\<close>
                 \<open>cvl\<^sub>2 = vl\<^sub>2\<close>
     using B
     unfolding asCBD.B_def case_prod_beta fst_conv snd_conv apply auto
-    unfolding B\<^sub>o\<^sub>p\<^sub>t_def B\<^sub>c\<^sub>t\<^sub>r_def B\<^sub>v\<^sub>a\<^sub>n_def by auto
-  moreover have \<open>\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
-    using asm istate by (rule init)
+    unfolding B\<^sub>o\<^sub>p\<^sub>t_def B\<^sub>c\<^sub>t\<^sub>r_def B\<^sub>v\<^sub>a\<^sub>n_def by auto  
+  also have \<open>\<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    using asm istate init leq unfolding initCond_def by auto
   ultimately show "\<Lambda> \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
     by auto
 next
   show "asCBD.unwind (\<Lambda> \<Theta>)"
     by (intro unwind_asCBDI unwind)
+qed
+
+subsection \<open>Compositional unwinding\<close>
+
+text \<open> We allow networks of unwinding relations that unwind into each other, 
+which offer a compositional alternative to monolithic unwinding. \<close>
+
+definition \<open>unwindIntoCond \<Theta> \<Theta>' \<equiv> \<forall>cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2. 
+  asCBD.reachNT\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 \<and> asCBD.reachNT\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 \<and> asCBD.reachNT\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 \<and> asCBD.reachNT\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 \<and> 
+  \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<and> s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2
+  \<longrightarrow>
+  asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 cvl\<^sub>1 \<or> asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 \<or> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1 \<or> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2
+  \<or>
+  proaction \<Theta>' cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<or>
+  finish \<Theta>' cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<and>
+  saction \<Theta>' cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+
+lemma saction_mono[intro]: 
+  assumes \<Theta>: \<open>\<Theta> \<le> \<Theta>'\<close> and saction: \<open>saction \<Theta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    shows \<open>saction \<Theta>' cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+unfolding saction_def proof (intro allI impI; elim conjE)
+  fix cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2'
+  assume \<open>validTrans\<^sub>v\<^sub>a\<^sub>n (cs\<^sub>1, cs\<^sub>1')\<close> \<open>asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 cvl\<^sub>1 cvl\<^sub>1'\<close> 
+         \<open>validTrans\<^sub>v\<^sub>a\<^sub>n (cs\<^sub>2, cs\<^sub>2')\<close> \<open>asCBD.consume\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 cvl\<^sub>2'\<close> \<open>cs\<^sub>1 \<approx>\<^sub>\<L>\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<close> 
+  hence unwindForOD: \<open>asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1' cvl\<^sub>1' \<or> asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2' cvl\<^sub>2' \<or>
+                      unwindForOD (\<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    using saction[unfolded saction_def] apply -
+    apply (erule allE[where x = cs\<^sub>1'], erule allE[where x = cvl\<^sub>1'], 
+           erule allE[where x = cs\<^sub>2'], erule allE[where x = cvl\<^sub>2'], elim impE)
+    by (intro conjI)
+  have \<Theta>: \<open>\<Theta> cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2' \<le> \<Theta>' cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2'\<close>
+    using \<Theta> by (simp add: le_funD)
+  show \<open>asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1' cvl\<^sub>1' \<or> asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2' cvl\<^sub>2' \<or>
+        unwindForOD (\<Theta>' cs\<^sub>1' cvl\<^sub>1' cs\<^sub>2' cvl\<^sub>2') s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    using unwindForOD apply (elim disjE, simp, simp, intro disjI2)
+    using \<Theta> by (rule Opt.unwindFor_mono)
+qed
+
+theorem distrib_unwind_secure:
+  assumes m: "0 < m" and nxt: "\<And>i. i < (m::nat) \<Longrightarrow> nxt i \<subseteq> {0..<m}" 
+      and init: \<open>initCond (\<Theta> 0)\<close>
+      and step: "\<And>i. i < m \<Longrightarrow> unwindIntoCond (\<Theta> i) (\<lambda>cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2. 
+         \<exists>j \<in> nxt i. \<Theta> j cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2)"
+    shows secure
+proof-
+  define \<Delta> where D: "\<Delta> \<equiv> \<lambda>cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2. \<exists>i < m. \<Theta> i cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2"
+  have i: "initCond \<Delta>" 
+    using init m unfolding D by (smt (verit) initCond_def)
+  have c: "unwind \<Delta>" 
+  unfolding unwind_def proof (intro allI impI allI, subst (asm) D; elim exE conjE)
+  fix cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 i
+  assume asm: \<open>asCBD.reachNT\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1\<close> \<open>asCBD.reachNT\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2\<close> \<open>asCBD.reachNT\<^sub>o\<^sub>p\<^sub>t s\<^sub>1\<close> \<open>asCBD.reachNT\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close>
+         \<open>s\<^sub>1 \<approx>\<^sub>\<L>\<^sub>o\<^sub>p\<^sub>t s\<^sub>2\<close> 
+     and i: \<open>i < m\<close> 
+     and \<Theta>: \<open>\<Theta> i cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+  let ?\<Delta> = \<open>(\<lambda>cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2. \<exists>j\<in>nxt i. \<Theta> j cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2)\<close>
+  have \<open>asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 cvl\<^sub>1 \<or> asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 \<or> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1 \<or>
+        asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2 \<or> proaction ?\<Delta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<or>
+        finish ?\<Delta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<and> saction ?\<Delta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    using step[OF i, unfolded unwindIntoCond_def] apply -
+    apply(erule allE[of _ cs\<^sub>1], erule allE[of _ cvl\<^sub>1], erule allE[of _ cs\<^sub>2], erule allE[of _ cvl\<^sub>2])
+    apply(erule allE[of _ s\<^sub>1], erule allE[of _ vl\<^sub>1], erule allE[of _ s\<^sub>2], erule allE[of _ vl\<^sub>2])
+    using asm \<Theta> by simp
+  thus \<open>asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>1 cvl\<^sub>1 \<or> asCBD.hopeless\<^sub>v\<^sub>a\<^sub>n cs\<^sub>2 cvl\<^sub>2 \<or> asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>1 vl\<^sub>1 \<or>
+        asCBD.hopeless\<^sub>o\<^sub>p\<^sub>t s\<^sub>2 vl\<^sub>2 \<or> proaction \<Delta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<or>
+        finish \<Delta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2 \<and> saction \<Delta> cs\<^sub>1 cvl\<^sub>1 cs\<^sub>2 cvl\<^sub>2 s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    unfolding D apply (elim disjE conjE, simp, simp, simp, simp)
+    subgoal
+      apply (rule disjI2, rule disjI2, rule disjI2, rule disjI2, rule disjI1)
+      apply (rule proaction_mono[where \<Theta> = ?\<Delta>])
+      apply auto
+      unfolding le_fun_def D apply simp
+      using atLeastLessThan_iff nxt subsetD by (metis i)
+    subgoal
+      apply (intro disjI2 conjI)
+      apply (rule finish_mono[where \<Theta> = ?\<Delta>])
+      unfolding le_fun_def D apply auto
+      using atLeastLessThan_iff nxt subsetD apply (metis i)
+      apply (rule saction_mono[where \<Theta> = ?\<Delta>])
+      unfolding le_fun_def D apply auto
+      using atLeastLessThan_iff nxt subsetD by (metis i)
+    .
+  qed
+  show ?thesis using unwind_secure[OF i c] .
 qed
 
 end

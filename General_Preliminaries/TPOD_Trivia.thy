@@ -1,6 +1,6 @@
 theory TPOD_Trivia
   imports 
-    "Bounded_Deducibility_Security.Trivia"
+    Bounded_Deducibility_Security.Trivia
     More_LazyLists.List_Filtermap
     (* TODO: I have renamed Relative_Security.Trivia \<Rightarrow> Relative_Security.RS_Trivia to avoid conflict *)
     Relative_Security.RS_Trivia
@@ -56,5 +56,6 @@ lemma Not_Not_comp[simp]: "\<not> (Not \<circ> P) s \<equiv> P s"
 lemma map_filtermap: \<open>map T1 (filtermap P T2 xs) =  filtermap P (T1 o T2) xs\<close>
   by (simp add: List_Filtermap.filtermap_def)
 
-end
+lemmas zip_injectI = arg_cong2[where f = zip]
 
+end

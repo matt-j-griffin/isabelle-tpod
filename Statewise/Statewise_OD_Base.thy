@@ -15,8 +15,7 @@ locale Statewise_OD_Base = System_Mod istate validTrans final
     and u :: "'state \<Rightarrow> bool"
 
   assumes isInter_not_final: \<open>\<And>x. final x \<Longrightarrow> \<not> isInter x\<close>
-      and equivp_lowEquiv: \<open>\<And>x y. \<lbrakk>isInter x \<Longrightarrow> op\<^sub>\<L> x = op\<^sub>\<L> y\<rbrakk> \<Longrightarrow> x \<approx>\<^sub>\<L> y = ((\<approx>\<^sub>\<L>) x = (\<approx>\<^sub>\<L>) y)\<close> (* Equivalence under assumptions *)
-
+      and transp_lowEquiv: \<open>\<And>x y z. \<lbrakk>isInter x \<Longrightarrow> op\<^sub>\<L> x = op\<^sub>\<L> y; x \<approx>\<^sub>\<L> y; y \<approx>\<^sub>\<L> z\<rbrakk> \<Longrightarrow> x \<approx>\<^sub>\<L> z\<close>
       and reflp_lowEquiv: \<open>reflp ((\<approx>\<^sub>\<L>)::'state \<Rightarrow> 'state \<Rightarrow> bool)\<close>
       and symp_lowEquiv: \<open>symp ((\<approx>\<^sub>\<L>)::'state \<Rightarrow> 'state \<Rightarrow> bool)\<close>
 
@@ -24,6 +23,17 @@ locale Statewise_OD_Base = System_Mod istate validTrans final
 
 begin
 
+lemma funct_all: \<open>(\<And>z. F y z = F x z) \<Longrightarrow> F x = F y\<close>
+  by auto
+
+lemma equivp_lowEquiv: 
+  assumes \<open>isInter x \<Longrightarrow> op\<^sub>\<L> x = op\<^sub>\<L> y\<close>
+  shows \<open>x \<approx>\<^sub>\<L> y = ((\<approx>\<^sub>\<L>) x = (\<approx>\<^sub>\<L>) y)\<close>
+  using reflp_lowEquiv symp_lowEquiv apply -
+  apply (auto elim: reflpE sympE)
+  apply (rule funct_all)
+  by (metis assms low_equiv_interE sympD transp_lowEquiv)
+ 
 abbreviation \<open>completed \<equiv> list_all final\<close>
 abbreviation \<open>neverInter \<equiv> never isInter\<close>
 
@@ -37,14 +47,11 @@ abbreviation
 where
   \<open>low_equivs \<equiv> list_all2 low_equiv\<close> 
 
-(* TODO filtermap lemma for interpretation? *)
 lemma ops\<^sub>\<L>_Cons_unfold: "ops\<^sub>\<L> (trn # tr) = (if isInter trn then op\<^sub>\<L> trn # ops\<^sub>\<L> tr else ops\<^sub>\<L> tr)"
   unfolding ops\<^sub>\<L>_def by auto
 
-
 abbreviation 
   \<open>validTrace \<pi> \<equiv> istate (hd \<pi>) \<and> validFromS (hd \<pi>) \<pi> \<and> completedFrom (hd \<pi>) \<pi> \<and> \<pi> \<noteq> []\<close>
-
 
 text \<open>OD as instance of forall forall BD Security:\<close>
 
@@ -72,6 +79,9 @@ lemma lowEquiv_imp_getObs: "\<lbrakk>isInter s \<Longrightarrow>  op\<^sub>\<L> 
   using lowEquiv_eq by blast
   
 definition \<open>ops\<^sub>\<H> = filtermap isInter op\<^sub>\<H>\<close>
+
+lemma ops\<^sub>\<H>_Cons_unfold: "ops\<^sub>\<H> (trn # tr) = (if isInter trn then op\<^sub>\<H> trn # ops\<^sub>\<H> tr else ops\<^sub>\<H> tr)"
+  unfolding ops\<^sub>\<H>_def by auto
 
 text \<open>OD with High Ops as instance of forall forall BD Security:\<close>
 
@@ -276,6 +286,22 @@ definition saction where
    asBD.hopeless s' vl' \<or> hopeless s1' vl1' \<or> 
    (\<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1')"
 
+lemma saction_mono[intro]:
+  assumes \<Delta>: \<open>\<Delta> \<le> \<Delta>'\<close> and saction: \<open>saction \<Delta> s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    shows \<open>saction \<Delta>' s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+unfolding saction_def proof (intro allI impI; elim conjE)
+  fix s' vl' s1' vl1'
+  assume \<open>validTrans (s\<^sub>1, s')\<close> \<open>consume s\<^sub>1 vl\<^sub>1 vl'\<close> \<open>validTrans (s\<^sub>2, s1')\<close> 
+         \<open>consume s\<^sub>2 vl\<^sub>2 vl1'\<close>
+  hence \<open>hopeless s' vl' \<or> hopeless s1' vl1' \<or> \<Delta> s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1'\<close>
+    using saction[unfolded saction_def] apply -
+    apply (erule allE[where x = s'], erule allE[where x = vl'], 
+           erule allE[where x = s1'], elim allE[where x = vl1'] impE)
+    by auto
+  thus \<open>hopeless s' vl' \<or> hopeless s1' vl1' \<or> \<Delta>' s' vl' s1' vl1' \<and> s' \<approx>\<^sub>\<L> s1'\<close>
+    using \<Delta>[unfolded le_fun_def, rule_format, of s' vl' s1' vl1'] by auto
+qed
+
 lemma consume2_zip_eq:
   assumes \<open>consume s vl vl'\<close> \<open>consume s1 vl1 vl1'\<close>
       and \<open>isInter s = isInter s1\<close>
@@ -320,6 +346,14 @@ abbreviation \<open>unwindFor \<Delta> s vl s1 vl1 \<equiv>
    iactionLeft s vl s1 vl1 \<and>
    iactionRight s vl s1 vl1 \<and>
    saction \<Delta> s vl s1 vl1\<close>
+
+lemma unwindFor_mono[intro]:
+  assumes \<Delta>: \<open>\<Delta> \<le> \<Delta>'\<close> and unwindFor: \<open>unwindFor \<Delta> s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    shows \<open>unwindFor \<Delta>' s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+using unwindFor proof safe
+  assume saction: \<open>saction \<Delta> s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close> thus \<open>saction \<Delta>' s\<^sub>1 vl\<^sub>1 s\<^sub>2 vl\<^sub>2\<close>
+    by (rule saction_mono[OF \<Delta>])
+qed
 
 lemma unwindFor_asBD:
   assumes \<open>unwindFor \<Delta> s vl s1 vl1\<close> and leq: \<open>s \<approx>\<^sub>\<L> s1\<close>
@@ -381,7 +415,10 @@ next
       proof (cases \<open>hopeless s1 vl1\<close>)
         case hopeless1: False
         have \<open>unwindFor \<Delta> s vl s1 vl1\<close>
-          using unwind[unfolded unwind_def] r1 r2 \<Delta> hopeless hopeless1 leq lops u by auto
+          using unwind[unfolded unwind_def] r1 r2 \<Delta> hopeless hopeless1 leq lops u apply -
+          apply (erule allE[where x = s], erule allE[where x = vl], erule allE[where x = s1], 
+                 elim allE[where x = vl1] impE conjE)
+          by auto
         thus ?thesis
           using leq hopeless hopeless1 \<Delta> lops by (intro disjI2 unwindFor_asBD)
       qed (rule disjI2, rule disjI1)

@@ -26,7 +26,9 @@ mv <afp-dir>/thys/Relative_Security/Preliminaries/Trivia <afp-dir>/thys/Relative
 
 You will also need to open these files and change their names.
 
-Next, open `Relative_Security/ROOT` and change `Trivia` to `RS_Trivia`.
+Next, remove the reference to `Trivia` in `Relative_Security/Relative_Security`, the reference is not needed.
+Finally, open `Relative_Security/ROOT` and change `Trivia` to `RS_Trivia`.
+
 
 
 

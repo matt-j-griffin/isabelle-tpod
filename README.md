@@ -26,6 +26,10 @@ mv <afp-dir>/thys/Relative_Security/Preliminaries/Trivia <afp-dir>/thys/Relative
 
 You will also need to open these files and change their names.
 
+Next, open `Relative_Security/ROOT` and change `Trivia` to `RS_Trivia`.
+
+
+
 You will also need to open `<afp-dir>/thys/Relative_Security/Preliminaries/Transistion_System` and change the imports line from `imports Trivia` to `imports RS_Trivia`.
 
 ## Installation
